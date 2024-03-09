@@ -17,7 +17,7 @@ async function get_danmus(title, id) {
     let urls = await get_related_url(episodeId)
     // console.log(urls)
     if (urls.length > 0) {
-        for(let i = 0; i < urls.length; i++) {
+        for (let i = 0; i < urls.length; i++) {
             let danmu_ext = await get_danmu_ext(urls[i].url)
             danmu = [...danmu, ...danmu_ext]
         }
@@ -31,7 +31,7 @@ async function get_animeId(title) {
     let data = await xhr_get(url)
     data = JSON.parse(data)
     // console.log(data)
-    let {animeId, animeTitle} = data.animes[0]
+    let { animeId, animeTitle } = data.animes[0]
     console.log(animeId)
     console.log(animeTitle)
     return animeId

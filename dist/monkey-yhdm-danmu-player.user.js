@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         樱花动漫、风车动漫弹幕播放
 // @namespace    https://github.com/LesslsMore/
-// @version      0.2.0
+// @version      0.2.1
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
 // @license      MIT
 // @match        https://www.dmla4.com/play/*
 // @require      https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.js
-// @require      https://unpkg.com/artplayer@5.1.1/dist/artplayer.js
-// @require      https://unpkg.com/artplayer-plugin-danmuku@5.0.1/dist/artplayer-plugin-danmuku.js
+// @require      https://cdn.jsdelivr.net/npm/artplayer@5.1.1/dist/artplayer.js
+// @require      https://cdn.jsdelivr.net/npm/artplayer-plugin-danmuku@5.0.1/dist/artplayer-plugin-danmuku.js
 // @connect      https://api.dandanplay.net/*
 // @connect      https://danmu.yhdmjx.com/*
 // @connect      http://v16m-default.akamaized.net/*
@@ -130,29 +130,13 @@
     data = JSON.parse(data);
     return data.comments;
   }
-  function NewPlayer(src_url, danmu) {
+  function NewPlayer(src_url) {
     re_render();
-    let danmus = bilibiliDanmuParseFromJson(danmu);
-    console.log("总共弹幕数目：");
-    console.log(danmus.length);
-    Artplayer_build(src_url, danmus);
-  }
-  function re_render() {
-    let player = document.querySelector(".stui-player__video.clearfix");
-    if (player == void 0) {
-      player = document.querySelector("#player-left");
-    }
-    let div = player.querySelector("div");
-    let h = div.offsetHeight;
-    let w = div.offsetWidth;
-    player.removeChild(div);
-    let app = `<div style="height: ${h}px; width: ${w}px;" class="artplayer-app"></div>`;
-    player.innerHTML = app;
-  }
-  function Artplayer_build(src_url, danmus) {
     var art = new Artplayer({
       container: ".artplayer-app",
       url: src_url,
+      // autoplay: true,
+      // muted: true,
       autoSize: true,
       fullscreen: true,
       fullscreenWeb: true,
@@ -161,47 +145,6 @@
       playbackRate: true,
       aspectRatio: true,
       setting: true,
-      plugins: [
-        artplayerPluginDanmuku({
-          danmuku: danmus,
-          speed: 5,
-          // 弹幕持续时间，单位秒，范围在[1 ~ 10]
-          opacity: 1,
-          // 弹幕透明度，范围在[0 ~ 1]
-          fontSize: 25,
-          // 字体大小，支持数字和百分比
-          color: "#FFFFFF",
-          // 默认字体颜色
-          mode: 0,
-          // 默认模式，0-滚动，1-静止
-          margin: [10, "25%"],
-          // 弹幕上下边距，支持数字和百分比
-          antiOverlap: true,
-          // 是否防重叠
-          useWorker: true,
-          // 是否使用 web worker
-          synchronousPlayback: false,
-          // 是否同步到播放速度
-          filter: (danmu) => danmu.text.length < 50,
-          // 弹幕过滤函数，返回 true 则可以发送
-          lockTime: 5,
-          // 输入框锁定时间，单位秒，范围在[1 ~ 60]
-          maxLength: 100,
-          // 输入框最大可输入的字数，范围在[0 ~ 500]
-          minWidth: 200,
-          // 输入框最小宽度，范围在[0 ~ 500]，填 0 则为无限制
-          maxWidth: 600,
-          // 输入框最大宽度，范围在[0 ~ Infinity]，填 0 则为 100% 宽度
-          theme: "light",
-          // 输入框自定义挂载时的主题色，默认为 dark，可以选填亮色 light
-          heatmap: true,
-          // 是否开启弹幕热度图, 默认为 false
-          beforeEmit: (danmu) => !!danmu.text.trim()
-          // 发送弹幕前的自定义校验，返回 true 则可以发送
-          // 通过 mount 选项可以自定义输入框挂载的位置，默认挂载于播放器底部，仅在当宽度小于最小值时生效
-          // mount: document.querySelector('.artplayer-danmuku'),
-        })
-      ],
       controls: [
         {
           position: "right",
@@ -228,33 +171,19 @@
         }
       ]
     });
-    art.on("artplayerPluginDanmuku:emit", (danmu) => {
-      console.info("新增弹幕", danmu);
-    });
-    art.on("artplayerPluginDanmuku:loaded", (danmus2) => {
-      console.info("加载弹幕", danmus2.length);
-    });
-    art.on("artplayerPluginDanmuku:error", (error) => {
-      console.info("加载错误", error);
-    });
-    art.on("artplayerPluginDanmuku:config", (option) => {
-      console.info("配置变化", option);
-    });
-    art.on("artplayerPluginDanmuku:stop", () => {
-      console.info("弹幕停止");
-    });
-    art.on("artplayerPluginDanmuku:start", () => {
-      console.info("弹幕开始");
-    });
-    art.on("artplayerPluginDanmuku:hide", () => {
-      console.info("弹幕隐藏");
-    });
-    art.on("artplayerPluginDanmuku:show", () => {
-      console.info("弹幕显示");
-    });
-    art.on("artplayerPluginDanmuku:destroy", () => {
-      console.info("弹幕销毁");
-    });
+    return art;
+  }
+  function re_render() {
+    let player = document.querySelector(".stui-player__video.clearfix");
+    if (player == void 0) {
+      player = document.querySelector("#player-left");
+    }
+    let div = player.querySelector("div");
+    let h = div.offsetHeight;
+    let w = div.offsetWidth;
+    player.removeChild(div);
+    let app = `<div style="height: ${h}px; width: ${w}px;" class="artplayer-app"></div>`;
+    player.innerHTML = app;
   }
   function getMode(key2) {
     switch (key2) {
@@ -309,6 +238,75 @@
       };
     });
   }
+  function addDanmu(art, danmus) {
+    let plug = artplayerPluginDanmuku({
+      danmuku: danmus,
+      speed: 5,
+      // 弹幕持续时间，单位秒，范围在[1 ~ 10]
+      opacity: 1,
+      // 弹幕透明度，范围在[0 ~ 1]
+      fontSize: 25,
+      // 字体大小，支持数字和百分比
+      color: "#FFFFFF",
+      // 默认字体颜色
+      mode: 0,
+      // 默认模式，0-滚动，1-静止
+      margin: [10, "25%"],
+      // 弹幕上下边距，支持数字和百分比
+      antiOverlap: true,
+      // 是否防重叠
+      useWorker: true,
+      // 是否使用 web worker
+      synchronousPlayback: false,
+      // 是否同步到播放速度
+      filter: (danmu) => danmu.text.length < 50,
+      // 弹幕过滤函数，返回 true 则可以发送
+      lockTime: 5,
+      // 输入框锁定时间，单位秒，范围在[1 ~ 60]
+      maxLength: 100,
+      // 输入框最大可输入的字数，范围在[0 ~ 500]
+      minWidth: 200,
+      // 输入框最小宽度，范围在[0 ~ 500]，填 0 则为无限制
+      maxWidth: 600,
+      // 输入框最大宽度，范围在[0 ~ Infinity]，填 0 则为 100% 宽度
+      theme: "light",
+      // 输入框自定义挂载时的主题色，默认为 dark，可以选填亮色 light
+      heatmap: true,
+      // 是否开启弹幕热度图, 默认为 false
+      beforeEmit: (danmu) => !!danmu.text.trim()
+      // 发送弹幕前的自定义校验，返回 true 则可以发送
+      // 通过 mount 选项可以自定义输入框挂载的位置，默认挂载于播放器底部，仅在当宽度小于最小值时生效
+      // mount: document.querySelector('.artplayer-danmuku'),
+    });
+    art.plugins.add(plug);
+    art.on("artplayerPluginDanmuku:emit", (danmu) => {
+      console.info("新增弹幕", danmu);
+    });
+    art.on("artplayerPluginDanmuku:loaded", (danmus2) => {
+      console.info("加载弹幕", danmus2.length);
+    });
+    art.on("artplayerPluginDanmuku:error", (error) => {
+      console.info("加载错误", error);
+    });
+    art.on("artplayerPluginDanmuku:config", (option) => {
+      console.info("配置变化", option);
+    });
+    art.on("artplayerPluginDanmuku:stop", () => {
+      console.info("弹幕停止");
+    });
+    art.on("artplayerPluginDanmuku:start", () => {
+      console.info("弹幕开始");
+    });
+    art.on("artplayerPluginDanmuku:hide", () => {
+      console.info("弹幕隐藏");
+    });
+    art.on("artplayerPluginDanmuku:show", () => {
+      console.info("弹幕显示");
+    });
+    art.on("artplayerPluginDanmuku:destroy", () => {
+      console.info("弹幕销毁");
+    });
+  }
   main();
   async function main() {
     let url = window.location.href;
@@ -322,8 +320,12 @@
     console.log(id);
     console.log(title);
     let src_url = await get_yhdm_url(url);
+    let art = NewPlayer(src_url);
     let danmu = await get_danmus(title, id);
-    NewPlayer(src_url, danmu);
+    let danmus = bilibiliDanmuParseFromJson(danmu);
+    console.log("总共弹幕数目：");
+    console.log(danmus.length);
+    addDanmu(art, danmus);
   }
 
 })(CryptoJS, Artplayer, artplayerPluginDanmuku);

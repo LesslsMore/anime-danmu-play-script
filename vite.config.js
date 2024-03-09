@@ -9,7 +9,7 @@ export default defineConfig({
       userscript: {
         name: '樱花动漫、风车动漫弹幕播放',
         namespace: 'https://github.com/LesslsMore/',
-        version: '0.2.0',
+        version: '0.2.1',
         author: 'lesslsmore',
         license: 'MIT',
         description: '自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫',
@@ -25,8 +25,8 @@ export default defineConfig({
       build: {
         externalGlobals: {
           'crypto-js': cdn.jsdelivr('CryptoJS','crypto-js.js'),
-          'artplayer': cdn.unpkg('Artplayer','dist/artplayer.js'),
-          'artplayer-plugin-danmuku': cdn.unpkg('artplayerPluginDanmuku','dist/artplayer-plugin-danmuku.js'),
+          'artplayer': cdn.jsdelivr('Artplayer','dist/artplayer.js'),
+          'artplayer-plugin-danmuku': cdn.jsdelivr('artplayerPluginDanmuku','dist/artplayer-plugin-danmuku.js'),
         },
       },
     }),

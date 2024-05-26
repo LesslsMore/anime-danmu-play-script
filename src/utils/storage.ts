@@ -1,3 +1,5 @@
+import { GM_getValue, GM_setValue } from '$';
+
 function createStorage(storage: Storage) {
   function getItem<T = any>(key: string): T | undefined
   function getItem<T = any>(key: string, defaultValue: T): T

@@ -1,21 +1,23 @@
 {
-  "name": "monkey-yhdm-danmu-player",
+  "name": "yhdm-danmu-player-ts",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
-    "unplugin-auto-import": "^0.17.5",
+    "@types/node": "^20.12.12",
+    "typescript": "^5.3.3",
     "vite": "^5.0.11",
     "vite-plugin-monkey": "^3.5.1"
   },
   "dependencies": {
     "artplayer": "^5.1.1",
     "artplayer-plugin-danmuku": "^5.0.1",
-    "crypto-js": "^4.2.0"
+    "crypto-js": "^4.2.0",
+    "unplugin-auto-import": "^0.17.6"
   }
 }

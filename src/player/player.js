@@ -46,6 +46,35 @@ function NewPlayer(src_url) {
                 },
             },
         ],
+        contextmenu: [
+            {
+                name: '搜索',
+                html: `<div id="k-player-danmaku-search-form">
+                <label>
+                  <span>搜索番剧名称</span>
+                  <input type="text" id="animeName" class="k-input" />
+                </label>
+                <div style="min-height:24px; padding-top:4px">
+                  <span id="tips"></span>
+                </div>
+                <label>
+                  <span>番剧名称</span>
+                  <select id="animes" class="k-select"></select>
+                </label>
+                <label>
+                  <span>章节</span>
+                  <select id="episodes" class="k-select"></select>
+                </label>
+                <label>
+                  <span class="open-danmaku-list">
+                    <span>弹幕列表</span><small data-id="count"></small>
+                  </span>
+                </label>
+                
+                <span class="specific-thanks">弹幕服务由 弹弹play 提供</span>
+              </div>`,
+            },
+        ],
     });
     return art
 }

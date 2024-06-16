@@ -1,5 +1,5 @@
 import { get_yhdm_info } from './parser/get_yhdm_info'
-import { get_comments, get_search_episodes } from './danmu/api'
+import {get_comment, get_episodeId, get_search_episodes} from './danmu/api'
 import get_yhdm_url from './parser/get_yhdm_url'
 import { add_danmu, update_danmu } from './danmu/danmu'
 import { NewPlayer, bilibiliDanmuParseFromJson } from './player/player'
@@ -18,36 +18,49 @@ let src_url = await get_yhdm_url(url)
 let art = NewPlayer(src_url)
 add_danmu(art)
 
+let $animeName = document.querySelector("#animeName")
 let $animes = document.querySelector("#animes")
 let $episodes = document.querySelector("#episodes")
-let $animeName = document.querySelector("#animeName")
 
-get_add_danmu(title)
-update_animeName()
+init_animeName()
+init_animes()
+init_episodes()
+
+update_anime_episode(title)
 
 function handleKeypressEvent(e) {
     if (e.key === 'Enter') {
-        get_add_danmu($animeName.value)
+        update_anime_episode($animeName.value)
     }
 }
 
 function handleBlurEvent() {
-    get_add_danmu($animeName.value)
+    update_anime_episode($animeName.value)
 }
 
-async function get_add_danmu(title) {
+async function update_episode_danmu() {
+    // 获取选中的值
+    const episodeId = $episodes.value;
+    // 在控制台打印选中的值
+    console.log('episodeId: ', episodeId);
+
+    let danmu = await get_comment(episodeId)
+
+    let danmus = bilibiliDanmuParseFromJson(danmu)
+    console.log('总共弹幕数目: ', danmus.length)
+    update_danmu(art, danmus)
+}
+
+async function update_anime_episode(title) {
     let animes = await get_animes(title)
 
     updateAnimes(animes)
+    updateEpisodes(animes[0].episodes)
 
-    let danmu = await get_comments(animes[0].animeId, episode)
-    let danmus = bilibiliDanmuParseFromJson(danmu)
-    console.log('总共弹幕数目：')
-    console.log(danmus.length)
-
-    update_danmu(art, danmus)
+    let episodeId = get_episodeId(animes[0].animeId, episode)
+    $episodes.value = episodeId
+    update_episode_danmu()
 }
-// }
 
 async function get_animes(title) {
     try {
@@ -65,13 +78,30 @@ async function get_animes(title) {
     }
 }
 
-function update_animeName() {
-    $animeName.value = title
+function init_animeName() {
     // 监听input元素的keypress事件
     $animeName.addEventListener('keypress', handleKeypressEvent);
-    
     // 监听input元素的blur事件
     $animeName.addEventListener('blur', handleBlurEvent);
+
+    $animeName.value = title
+}
+
+function init_animes() {
+    $animes.addEventListener('change', async () => {
+        // 获取选中的值
+        const animeId = $animes.value;
+        const idx = $animes.selectedIndex;
+        const animeTitle = $animes.options[idx].text;
+        // 在控制台打印选中的值
+        console.log('animeTitle: ', animeTitle);
+        update_anime_episode(animeTitle)
+    });
+}
+
+function init_episodes() {
+    // 监听input元素的keypress事件
+    $episodes.addEventListener('change', update_episode_danmu);
 }
 
 function updateAnimes(animes) {
@@ -81,12 +111,10 @@ function updateAnimes(animes) {
         ''
     )
     $animes.innerHTML = html
-    updateEpisodes(animes[0])
 }
 
 // 更新 episode select
-function updateEpisodes(anime) {
-    const { episodes } = anime
+function updateEpisodes(episodes) {
     const html = episodes.reduce(
         (html, episode) =>
             html +

@@ -40,3 +40,6 @@
 ### 油猴脚本地址
 https://greasyfork.org/zh-CN/scripts/485364
 
+### 更新记录
+0.3.1 优化手动搜索选择功能
+

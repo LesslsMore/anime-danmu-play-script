@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         樱花动漫、风车动漫弹幕播放
 // @namespace    https://github.com/LesslsMore/yhdm-danmu-player-ts
-// @version      0.3.0
+// @version      0.3.1
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
 // @license      MIT
@@ -74,12 +74,10 @@
   let end_point = "https://api.dandanplay.net";
   let API_comment = "/api/v2/comment/";
   let API_search_episodes = `/api/v2/search/episodes`;
-  async function get_comments(animeId, id) {
+  function get_episodeId(animeId, id) {
     id = id.padStart(4, "0");
     let episodeId = `${animeId}${id}`;
-    console.log(episodeId);
-    let danmu = await get_comment(episodeId);
-    return danmu;
+    return episodeId;
   }
   async function get_search_episodes(anime, episode2) {
     const res = await request({
@@ -358,27 +356,36 @@
   let src_url = await( get_yhdm_url(url));
   let art = NewPlayer(src_url);
   add_danmu(art);
+  let $animeName = document.querySelector("#animeName");
   let $animes = document.querySelector("#animes");
   let $episodes = document.querySelector("#episodes");
-  let $animeName = document.querySelector("#animeName");
-  get_add_danmu(title);
-  update_animeName();
+  init_animeName();
+  init_animes();
+  init_episodes();
+  update_anime_episode(title);
   function handleKeypressEvent(e) {
     if (e.key === "Enter") {
-      get_add_danmu($animeName.value);
+      update_anime_episode($animeName.value);
     }
   }
   function handleBlurEvent() {
-    get_add_danmu($animeName.value);
+    update_anime_episode($animeName.value);
   }
-  async function get_add_danmu(title2) {
+  async function update_episode_danmu() {
+    const episodeId = $episodes.value;
+    console.log("episodeId: ", episodeId);
+    let danmu = await get_comment(episodeId);
+    let danmus = bilibiliDanmuParseFromJson(danmu);
+    console.log("总共弹幕数目: ", danmus.length);
+    update_danmu(art, danmus);
+  }
+  async function update_anime_episode(title2) {
     let animes = await get_animes(title2);
     updateAnimes(animes);
-    let danmu = await get_comments(animes[0].animeId, episode);
-    let danmus = bilibiliDanmuParseFromJson(danmu);
-    console.log("总共弹幕数目：");
-    console.log(danmus.length);
-    update_danmu(art, danmus);
+    updateEpisodes(animes[0].episodes);
+    let episodeId = get_episodeId(animes[0].animeId, episode);
+    $episodes.value = episodeId;
+    update_episode_danmu();
   }
   async function get_animes(title2) {
     try {
@@ -393,10 +400,22 @@
       console.log("弹幕服务异常，稍后再试");
     }
   }
-  function update_animeName() {
-    $animeName.value = title;
+  function init_animeName() {
     $animeName.addEventListener("keypress", handleKeypressEvent);
     $animeName.addEventListener("blur", handleBlurEvent);
+    $animeName.value = title;
+  }
+  function init_animes() {
+    $animes.addEventListener("change", async () => {
+      $animes.value;
+      const idx = $animes.selectedIndex;
+      const animeTitle = $animes.options[idx].text;
+      console.log("animeTitle: ", animeTitle);
+      update_anime_episode(animeTitle);
+    });
+  }
+  function init_episodes() {
+    $episodes.addEventListener("change", update_episode_danmu);
   }
   function updateAnimes(animes) {
     const html = animes.reduce(
@@ -404,10 +423,8 @@
       ""
     );
     $animes.innerHTML = html;
-    updateEpisodes(animes[0]);
   }
-  function updateEpisodes(anime) {
-    const { episodes } = anime;
+  function updateEpisodes(episodes) {
     const html = episodes.reduce(
       (html2, episode2) => html2 + `<option value="${episode2.episodeId}">${episode2.episodeTitle}</option>`,
       ""

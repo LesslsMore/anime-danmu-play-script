@@ -8,15 +8,15 @@
 
 ## 主要功能
 
-- 自动加载匹配的在线弹幕
-- 手动搜索番剧名称，没有自动加载弹幕时的备选方案
-- 可手动上传 xml 格式本地弹幕
+- 自动加载弹幕
+- 手动搜索弹幕
+- 手动上传弹幕
 
 ## 效果演示
 
 ### 自动加载弹幕
 
-弹幕加载和播放暂停时会显示番剧弹幕信息
+自动匹配加载动漫剧集对应弹幕并播放，弹幕加载和播放暂停时会显示番剧弹幕信息
 
 ![](https://raw.githubusercontent.com/LesslsMore/yhdm-danmu-player-ts/master/doc/img1.png)
 
@@ -55,13 +55,17 @@
 https://greasyfork.org/zh-CN/scripts/485364
 
 ### 更新记录
+
 0.3.2 显示弹幕信息，添加缓存，性能优化，手动搜索仅需一次
+
 0.3.1 优化手动搜索选择功能
 
 ### 最后
 
-欢迎提交问题与反馈
+欢迎提交问题与反馈！
+
 [issue](https://github.com/LesslsMore/yhdm-danmu-player-ts/issues)
+
 [feedback](https://greasyfork.org/zh-CN/scripts/485364/feedback)
 
 如果觉得有用，请转发和收藏，这就是对优化和更新的支持！

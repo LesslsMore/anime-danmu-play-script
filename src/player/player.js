@@ -67,7 +67,7 @@ function NewPlayer(src_url) {
                 </label>
                 <label>
                   <span class="open-danmaku-list">
-                    <span>弹幕列表</span><small data-id="count"></small>
+                    <span>弹幕列表</span><small id="count"></small>
                   </span>
                 </label>
                 
@@ -109,7 +109,7 @@ function getMode(key) {
     }
 }
 
-// 将 danmu xml 字符串转为 bilibili 格式 
+// 将 danmu xml 字符串转为 bilibili 格式
 function bilibiliDanmuParseFromXml(xmlString) {
     if (typeof xmlString !== 'string') return [];
     const matches = xmlString.matchAll(/<d (?:.*? )??p="(?<p>.+?)"(?: .*?)?>(?<text>.+?)<\/d>/gs);
@@ -143,7 +143,7 @@ function bilibiliDanmuParseFromXml(xmlString) {
         .filter(Boolean);
 }
 
-// 将 danmu json 转为 bilibili 格式 
+// 将 danmu json 转为 bilibili 格式
 function bilibiliDanmuParseFromJson(jsonString) {
     return jsonString.map((comment) => {
         let attr = comment.p.split(',');

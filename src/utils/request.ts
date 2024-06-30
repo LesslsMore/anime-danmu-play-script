@@ -19,7 +19,7 @@ export function request(opts: Opts) {
     })
     url = u.toString()
   }
-
+  console.log('请求地址: ', url)
   return new Promise<any>((resolve, reject) => {
     GM_xmlhttpRequest({
       url,
@@ -27,7 +27,7 @@ export function request(opts: Opts) {
       responseType: 'json',
       onload: (res: any) => {
         if (process.env.NODE_ENV === 'development') {
-          console.log(res, res.response)
+          // console.log(res, res.response)
         }
         resolve(res.response)
       },

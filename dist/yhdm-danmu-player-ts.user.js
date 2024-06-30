@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         樱花动漫、风车动漫弹幕播放
+// @name         动漫网站弹幕播放
 // @namespace    https://github.com/LesslsMore/yhdm-danmu-player-ts
-// @version      0.3.1
+// @version      0.3.2
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
 // @license      MIT
@@ -15,6 +15,8 @@
 // @connect      http://v16m-default.akamaized.net/*
 // @connect      self
 // @connect      *
+// @grant        GM_getValue
+// @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
 // @run-at       document-end
 // ==/UserScript==
@@ -34,6 +36,8 @@
       title: title2
     };
   }
+  var _GM_getValue = /* @__PURE__ */ (() => typeof GM_getValue != "undefined" ? GM_getValue : void 0)();
+  var _GM_setValue = /* @__PURE__ */ (() => typeof GM_setValue != "undefined" ? GM_setValue : void 0)();
   var _GM_xmlhttpRequest = /* @__PURE__ */ (() => typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : void 0)();
   function xhr_get(url2) {
     return new Promise((resolve, reject) => {
@@ -59,6 +63,7 @@
       });
       url2 = u.toString();
     }
+    console.log("请求地址: ", url2);
     return new Promise((resolve, reject) => {
       _GM_xmlhttpRequest({
         url: url2,
@@ -186,29 +191,10 @@
     art2.on("artplayerPluginDanmuku:emit", (danmu) => {
       console.info("新增弹幕", danmu);
     });
-    art2.on("artplayerPluginDanmuku:loaded", (danmus) => {
-      console.info("加载弹幕", danmus.length);
-    });
     art2.on("artplayerPluginDanmuku:error", (error) => {
       console.info("加载错误", error);
     });
     art2.on("artplayerPluginDanmuku:config", (option) => {
-      console.info("配置变化", option);
-    });
-    art2.on("artplayerPluginDanmuku:stop", () => {
-      console.info("弹幕停止");
-    });
-    art2.on("artplayerPluginDanmuku:start", () => {
-      console.info("弹幕开始");
-    });
-    art2.on("artplayerPluginDanmuku:hide", () => {
-      console.info("弹幕隐藏");
-    });
-    art2.on("artplayerPluginDanmuku:show", () => {
-      console.info("弹幕显示");
-    });
-    art2.on("artplayerPluginDanmuku:destroy", () => {
-      console.info("弹幕销毁");
     });
   }
   function NewPlayer(src_url2) {
@@ -272,7 +258,7 @@
                 </label>
                 <label>
                   <span class="open-danmaku-list">
-                    <span>弹幕列表</span><small data-id="count"></small>
+                    <span>弹幕列表</span><small id="count"></small>
                   </span>
                 </label>
                 
@@ -348,21 +334,93 @@
       };
     });
   }
+  function createStorage(storage) {
+    function getItem(key2, defaultValue) {
+      try {
+        const value = storage.getItem(key2);
+        if (value)
+          return JSON.parse(value);
+        return defaultValue;
+      } catch (error) {
+        return defaultValue;
+      }
+    }
+    return {
+      getItem,
+      setItem(key2, value) {
+        storage.setItem(key2, JSON.stringify(value));
+      },
+      removeItem: storage.removeItem.bind(storage),
+      clear: storage.clear.bind(storage)
+    };
+  }
+  createStorage(window.sessionStorage);
+  const local = createStorage(window.localStorage);
+  let gm;
+  try {
+    gm = { getItem: _GM_getValue, setItem: _GM_setValue };
+  } catch (error) {
+    gm = local;
+  }
   let url = window.location.href;
   let { episode, title } = get_yhdm_info(url);
+  let yhdmId = url.split("-")[0];
   console.log(url);
   console.log(episode);
   console.log(title);
-  let src_url = await( get_yhdm_url(url));
+  let info = local.getItem(yhdmId);
+  if (info === void 0) {
+    info = {
+      "animeTitle": title,
+      "episodes": {}
+    };
+  }
+  let src_url;
+  if (!info["episodes"].hasOwnProperty(url)) {
+    src_url = await( get_yhdm_url(url));
+    info["episodes"][url] = src_url;
+    local.setItem(yhdmId, info);
+  } else {
+    src_url = info["episodes"][url];
+  }
   let art = NewPlayer(src_url);
   add_danmu(art);
+  let $count = document.querySelector("#count");
   let $animeName = document.querySelector("#animeName");
   let $animes = document.querySelector("#animes");
   let $episodes = document.querySelector("#episodes");
+  function msgs() {
+    if ($count.textContent === "") {
+      let msgs2 = [
+        "未搜索到番剧弹幕",
+        "请按右键菜单",
+        "手动搜索番剧名称"
+      ];
+      art.notice.show = msgs2.join(",\n\n");
+    } else {
+      let msgs2 = [
+        `番剧：${$animes.options[$animes.selectedIndex].text}`,
+        `章节: ${$episodes.options[$episodes.selectedIndex].text}`,
+        `已加载 ${$count.textContent} 条弹幕`
+      ];
+      art.notice.show = msgs2.join("\n\n");
+    }
+  }
+  art.on("artplayerPluginDanmuku:loaded", (danmus) => {
+    console.info("加载弹幕", danmus.length);
+    $count.textContent = danmus.length;
+    msgs();
+  });
+  art.on("ready", () => {
+    msgs();
+  });
+  art.on("pause", () => {
+    msgs();
+  });
   init_animeName();
   init_animes();
   init_episodes();
-  update_anime_episode(title);
+  update_anime_episode(info["animeTitle"]);
   function handleKeypressEvent(e) {
     if (e.key === "Enter") {
       update_anime_episode($animeName.value);
@@ -376,7 +434,6 @@
     console.log("episodeId: ", episodeId);
     let danmu = await get_comment(episodeId);
     let danmus = bilibiliDanmuParseFromJson(danmu);
-    console.log("总共弹幕数目: ", danmus.length);
     update_danmu(art, danmus);
   }
   async function update_anime_episode(title2) {
@@ -389,13 +446,22 @@
   }
   async function get_animes(title2) {
     try {
-      let animes = await get_search_episodes(title2);
-      if (animes.length === 0) {
-        console.log("未搜索到番剧");
-      } else {
-        console.log(animes);
-        return animes;
+      let animes = info["animes"];
+      if (animes === void 0) {
+        console.log("没有缓存，请求接口");
+        animes = await get_search_episodes(title2);
+        if (animes.length === 0) {
+          console.log("未搜索到番剧");
+        } else {
+          info["animes"] = animes;
+          local.setItem(yhdmId, info);
+        }
       }
+      if (info["animeTitle"] !== animes[0]["animeTitle"]) {
+        info["animeTitle"] = animes[0]["animeTitle"];
+        local.setItem(yhdmId, info);
+      }
+      return animes;
     } catch (error) {
       console.log("弹幕服务异常，稍后再试");
     }
@@ -408,8 +474,7 @@
   function init_animes() {
     $animes.addEventListener("change", async () => {
       $animes.value;
-      const idx = $animes.selectedIndex;
-      const animeTitle = $animes.options[idx].text;
+      const animeTitle = $animes.options[$animes.selectedIndex].text;
       console.log("animeTitle: ", animeTitle);
       update_anime_episode(animeTitle);
     });

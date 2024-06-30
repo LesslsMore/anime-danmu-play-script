@@ -2,7 +2,6 @@ import { defineConfig } from 'vite';
 import monkey, { cdn, util } from 'vite-plugin-monkey';
 import AutoImport from 'unplugin-auto-import/vite';
 
-
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -12,9 +11,9 @@ export default defineConfig({
     monkey({
       entry: 'src/main.js',
       userscript: {
-        name: '樱花动漫、风车动漫弹幕播放',
+        name: '动漫网站弹幕播放',
         namespace: 'https://github.com/LesslsMore/yhdm-danmu-player-ts',
-        version: '0.3.1',
+        version: '0.3.2',
         author: 'lesslsmore',
         license: 'MIT',
         description: '自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫',

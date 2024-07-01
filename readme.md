@@ -28,6 +28,12 @@
 
 ![](https://raw.githubusercontent.com/LesslsMore/yhdm-danmu-player-ts/master/doc/img3.png)
 
+又例如 无职转生第二季 part2 未搜索到番剧弹幕，按照上面同样的方式，
+
+将搜索名称改为 无职转生 后，按下回车键，选择 无职转生第二季 part2 后，会自动加载当前集数的弹幕
+
+![](https://raw.githubusercontent.com/LesslsMore/yhdm-danmu-player-ts/master/doc/img5.png)
+
 ### 手动上传弹幕
 
 如果有本地下载好的弹幕，可以点击上传弹幕，添加 xml 格式本地弹幕
@@ -56,9 +62,11 @@ https://greasyfork.org/zh-CN/scripts/485364
 
 ### 更新记录
 
-0.3.2 显示弹幕信息，添加缓存，性能优化，手动搜索仅需一次
+0.3.3 优化完善手动搜索番剧选择功能
 
-0.3.1 优化手动搜索选择功能
+0.3.2 显示弹幕信息，添加缓存，优化性能，记录选择的番剧
+
+0.3.1 优化完善手动搜索剧集选择功能
 
 ### 最后
 

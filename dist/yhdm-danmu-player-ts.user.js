@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         动漫网站弹幕播放
 // @namespace    https://github.com/LesslsMore/yhdm-danmu-player-ts
-// @version      0.3.2
+// @version      0.3.3
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
 // @license      MIT
@@ -371,8 +371,10 @@
   let info = local.getItem(yhdmId);
   if (info === void 0) {
     info = {
-      "animeTitle": title,
-      "episodes": {}
+      // "animeTitle": title,
+      "episodes": {},
+      "animes": [{ "animeTitle": title }],
+      "idx": 0
     };
   }
   let src_url;
@@ -420,7 +422,7 @@
   init_animeName();
   init_animes();
   init_episodes();
-  update_anime_episode(info["animeTitle"]);
+  update_anime_episode(info["animes"][info["idx"]]["animeTitle"]);
   function handleKeypressEvent(e) {
     if (e.key === "Enter") {
       update_anime_episode($animeName.value);
@@ -437,17 +439,19 @@
     update_danmu(art, danmus);
   }
   async function update_anime_episode(title2) {
+    let idx = info["idx"];
     let animes = await get_animes(title2);
     updateAnimes(animes);
-    updateEpisodes(animes[0].episodes);
-    let episodeId = get_episodeId(animes[0].animeId, episode);
+    $animes.value = info["animes"][idx]["animeId"];
+    updateEpisodes(animes[idx].episodes);
+    let episodeId = get_episodeId(animes[idx].animeId, episode);
     $episodes.value = episodeId;
     update_episode_danmu();
   }
   async function get_animes(title2) {
     try {
       let animes = info["animes"];
-      if (animes === void 0) {
+      if (!animes[0].hasOwnProperty("animeId")) {
         console.log("没有缓存，请求接口");
         animes = await get_search_episodes(title2);
         if (animes.length === 0) {
@@ -457,10 +461,6 @@
           local.setItem(yhdmId, info);
         }
       }
-      if (info["animeTitle"] !== animes[0]["animeTitle"]) {
-        info["animeTitle"] = animes[0]["animeTitle"];
-        local.setItem(yhdmId, info);
-      }
       return animes;
     } catch (error) {
       console.log("弹幕服务异常，稍后再试");
@@ -469,14 +469,22 @@
   function init_animeName() {
     $animeName.addEventListener("keypress", handleKeypressEvent);
     $animeName.addEventListener("blur", handleBlurEvent);
-    $animeName.value = title;
+    $animeName.value = info["animes"][info["idx"]]["animeTitle"];
   }
   function init_animes() {
     $animes.addEventListener("change", async () => {
-      $animes.value;
-      const animeTitle = $animes.options[$animes.selectedIndex].text;
+      const idx = $animes.selectedIndex;
+      const animeTitle = $animes.options[idx].text;
       console.log("animeTitle: ", animeTitle);
-      update_anime_episode(animeTitle);
+      if (info["idx"] !== idx) {
+        info["idx"] = idx;
+        local.setItem(yhdmId, info);
+      }
+      let animes = info["animes"];
+      updateEpisodes(animes[idx].episodes);
+      let episodeId = get_episodeId(animes[idx].animeId, episode);
+      $episodes.value = episodeId;
+      update_episode_danmu();
     });
   }
   function init_episodes() {

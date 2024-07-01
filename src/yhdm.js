@@ -1,14 +1,14 @@
-import { get_yhdm_info } from './parser/get_yhdm_info'
+import {get_yhdm_info} from './parser/get_yhdm_info'
 import {get_comment, get_episodeId, get_search_episodes} from './danmu/api'
 import get_yhdm_url from './parser/get_yhdm_url'
-import { add_danmu, update_danmu } from './danmu/danmu'
-import { NewPlayer, bilibiliDanmuParseFromJson } from './player/player'
-import { local } from './utils/storage'
+import {add_danmu, update_danmu} from './danmu/danmu'
+import {NewPlayer, bilibiliDanmuParseFromJson} from './player/player'
+import {local} from './utils/storage'
 
 // export async function yhdm() {
 let url = window.location.href
 
-let { episode, title } = get_yhdm_info(url)
+let {episode, title} = get_yhdm_info(url)
 
 let yhdmId = url.split('-')[0]
 console.log(url)
@@ -18,12 +18,14 @@ console.log(title)
 let info = local.getItem(yhdmId)
 if (info === undefined) {
     info = {
-        "animeTitle": title,
+        // "animeTitle": title,
         "episodes": {},
+        'animes':[{'animeTitle': title}],
+        'idx': 0,
     }
 }
 let src_url
-if(!info['episodes'].hasOwnProperty(url)) {
+if (!info['episodes'].hasOwnProperty(url)) {
     src_url = await get_yhdm_url(url)
     info['episodes'][url] = src_url
     local.setItem(yhdmId, info)
@@ -57,6 +59,7 @@ function msgs() {
         art.notice.show = msgs.join('\n\n')
     }
 }
+
 // 监听加载到的弹幕数组
 art.on('artplayerPluginDanmuku:loaded', (danmus) => {
     console.info('加载弹幕', danmus.length);
@@ -76,7 +79,7 @@ init_animeName()
 init_animes()
 init_episodes()
 
-update_anime_episode(info['animeTitle'])
+update_anime_episode(info['animes'][info['idx']]['animeTitle'])
 
 function handleKeypressEvent(e) {
     if (e.key === 'Enter') {
@@ -102,13 +105,17 @@ async function update_episode_danmu() {
 }
 
 async function update_anime_episode(title) {
+    let idx = info['idx']
     let animes = await get_animes(title)
-
+    // 初始番剧选项与默认选择
     updateAnimes(animes)
-    updateEpisodes(animes[0].episodes)
+    $animes.value = info['animes'][idx]['animeId']
 
-    let episodeId = get_episodeId(animes[0].animeId, episode)
+    // 初始剧集选项与默认选择
+    updateEpisodes(animes[idx].episodes)
+    let episodeId = get_episodeId(animes[idx].animeId, episode)
     $episodes.value = episodeId
+
     update_episode_danmu()
 }
 
@@ -116,7 +123,7 @@ async function get_animes(title) {
     try {
         let animes = info['animes']
         // console.log(animes)
-        if (animes === undefined) {
+        if (!animes[0].hasOwnProperty('animeId')) {
             console.log('没有缓存，请求接口')
             animes = await get_search_episodes(title)
             if (animes.length === 0) {
@@ -127,16 +134,10 @@ async function get_animes(title) {
                 local.setItem(yhdmId, info)
             }
         }
-        if (info['animeTitle'] !== animes[0]['animeTitle']) {
-            info['animeTitle'] = animes[0]['animeTitle']
-            local.setItem(yhdmId, info)
-        }
         // console.log(animes)
         return animes
-
     } catch (error) {
         console.log('弹幕服务异常，稍后再试')
-        // showTips('弹幕服务异常，稍后再试', 3000)
     }
 }
 
@@ -145,18 +146,31 @@ function init_animeName() {
     $animeName.addEventListener('keypress', handleKeypressEvent);
     // 监听input元素的blur事件
     $animeName.addEventListener('blur', handleBlurEvent);
-
-    $animeName.value = title
+    // 初始搜索番剧默认名称
+    $animeName.value = info['animes'][info['idx']]['animeTitle']
 }
 
 function init_animes() {
     $animes.addEventListener('change', async () => {
         // 获取选中的值
-        const animeId = $animes.value;
-        const animeTitle = $animes.options[$animes.selectedIndex].text;
+        const idx = $animes.selectedIndex
+        const animeTitle = $animes.options[idx].text;
         // 在控制台打印选中的值
         console.log('animeTitle: ', animeTitle);
-        update_anime_episode(animeTitle)
+
+        // 存储选择的番剧序号
+        if (info['idx'] !== idx) {
+            info['idx'] = idx
+            local.setItem(yhdmId, info)
+        }
+
+        let animes = info['animes']
+        updateEpisodes(animes[idx].episodes)
+        // 初始选择剧集
+        let episodeId = get_episodeId(animes[idx].animeId, episode)
+        $episodes.value = episodeId
+
+        update_episode_danmu()
     });
 }
 

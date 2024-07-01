@@ -1,6 +1,7 @@
 
 import { get_agedm_info, get_agedm_src } from './parser/get_agedm_info'
 
+import './utils/local.js'
 import './yhdm'
 
 // if (document.readyState !== 'loading') {

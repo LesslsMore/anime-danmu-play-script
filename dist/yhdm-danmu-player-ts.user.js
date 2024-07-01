@@ -24,6 +24,23 @@
 (async function (CryptoJS, artplayerPluginDanmuku, Artplayer) {
   'use strict';
 
+  (function() {
+    var originalSetItem = localStorage.setItem;
+    var originalRemoveItem = localStorage.removeItem;
+    localStorage.setItem = function(key2, value) {
+      var event = new Event("itemInserted");
+      event.key = key2;
+      event.value = value;
+      document.dispatchEvent(event);
+      originalSetItem.apply(this, arguments);
+    };
+    localStorage.removeItem = function(key2) {
+      var event = new Event("itemRemoved");
+      event.key = key2;
+      document.dispatchEvent(event);
+      originalRemoveItem.apply(this, arguments);
+    };
+  })();
   function get_yhdm_info(url2) {
     let episode2 = url2.split("-").pop().split(".")[0];
     let title2 = document.querySelector(".stui-player__detail.detail > h1 > a");
@@ -408,29 +425,8 @@
       art.notice.show = msgs2.join("\n\n");
     }
   }
-  art.on("artplayerPluginDanmuku:loaded", (danmus) => {
-    console.info("加载弹幕", danmus.length);
-    $count.textContent = danmus.length;
-    msgs();
-  });
-  art.on("ready", () => {
-    msgs();
-  });
-  art.on("pause", () => {
-    msgs();
-  });
-  init_animeName();
-  init_animes();
-  init_episodes();
-  update_anime_episode(info["animes"][info["idx"]]["animeTitle"]);
-  function handleKeypressEvent(e) {
-    if (e.key === "Enter") {
-      update_anime_episode($animeName.value);
-    }
-  }
-  function handleBlurEvent() {
-    update_anime_episode($animeName.value);
-  }
+  init();
+  get_animes();
   async function update_episode_danmu() {
     const episodeId = $episodes.value;
     console.log("episodeId: ", episodeId);
@@ -438,71 +434,102 @@
     let danmus = bilibiliDanmuParseFromJson(danmu);
     update_danmu(art, danmus);
   }
-  async function update_anime_episode(title2) {
-    let idx = info["idx"];
-    let animes = await get_animes(title2);
-    updateAnimes(animes);
-    $animes.value = info["animes"][idx]["animeId"];
-    updateEpisodes(animes[idx].episodes);
-    let episodeId = get_episodeId(animes[idx].animeId, episode);
-    $episodes.value = episodeId;
-    update_episode_danmu();
+  function get_animes() {
+    const { animes, idx } = info;
+    const animeTitle = animes[idx];
+    if (!animes[idx].hasOwnProperty("animeId")) {
+      console.log("没有缓存，请求接口");
+      get_animes_new(animeTitle);
+    } else {
+      console.log("有缓存，请求弹幕");
+      updateAnimes(animes, idx);
+    }
   }
-  async function get_animes(title2) {
+  async function get_animes_new(title2) {
     try {
-      let animes = info["animes"];
-      if (!animes[0].hasOwnProperty("animeId")) {
-        console.log("没有缓存，请求接口");
-        animes = await get_search_episodes(title2);
-        if (animes.length === 0) {
-          console.log("未搜索到番剧");
-        } else {
-          info["animes"] = animes;
-          local.setItem(yhdmId, info);
-        }
+      const animes = await get_search_episodes(title2);
+      if (animes.length === 0) {
+        console.log("未搜索到番剧");
+      } else {
+        info["animes"] = animes;
+        local.setItem(yhdmId, info);
       }
       return animes;
     } catch (error) {
       console.log("弹幕服务异常，稍后再试");
     }
   }
-  function init_animeName() {
-    $animeName.addEventListener("keypress", handleKeypressEvent);
-    $animeName.addEventListener("blur", handleBlurEvent);
-    $animeName.value = info["animes"][info["idx"]]["animeTitle"];
-  }
-  function init_animes() {
-    $animes.addEventListener("change", async () => {
-      const idx = $animes.selectedIndex;
-      const animeTitle = $animes.options[idx].text;
-      console.log("animeTitle: ", animeTitle);
-      if (info["idx"] !== idx) {
-        info["idx"] = idx;
-        local.setItem(yhdmId, info);
+  function init() {
+    art.on("artplayerPluginDanmuku:loaded", (danmus) => {
+      console.info("加载弹幕", danmus.length);
+      $count.textContent = danmus.length;
+      msgs();
+    });
+    art.on("ready", () => {
+      msgs();
+    });
+    art.on("pause", () => {
+      msgs();
+    });
+    $animeName.addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        get_animes_new($animeName.value);
       }
-      let animes = info["animes"];
-      updateEpisodes(animes[idx].episodes);
-      let episodeId = get_episodeId(animes[idx].animeId, episode);
-      $episodes.value = episodeId;
+    });
+    $animeName.addEventListener("blur", () => {
+      get_animes_new($animeName.value);
+    });
+    $animeName.value = info["animes"][info["idx"]]["animeTitle"];
+    $animes.addEventListener("change", async () => {
+      const idx_n = $animes.selectedIndex;
+      const { idx, animes } = info;
+      if (idx_n !== idx) {
+        info["idx"] = idx_n;
+        local.setItem(yhdmId, info);
+        updateEpisodes(animes[idx_n]);
+        $animeName.value = info["animes"][info["idx"]]["animeTitle"];
+      }
+    });
+    $episodes.addEventListener("change", update_episode_danmu);
+    document.addEventListener("itemInserted", function(e) {
+      let { animes: animes_o } = local.getItem(yhdmId);
+      let { animes: animes_n, idx: idx_n } = JSON.parse(e.value);
+      if (animes_n !== animes_o) {
+        updateAnimes(animes_n, idx_n);
+      }
+    });
+    document.addEventListener("updateAnimes", function(e) {
+      console.log("updateAnimes 事件");
+      updateEpisodes(e.value);
+    });
+    document.addEventListener("updateEpisodes", function(e) {
+      console.log("updateEpisodes 事件");
       update_episode_danmu();
     });
   }
-  function init_episodes() {
-    $episodes.addEventListener("change", update_episode_danmu);
-  }
-  function updateAnimes(animes) {
+  function updateAnimes(animes, idx) {
     const html = animes.reduce(
       (html2, anime) => html2 + `<option value="${anime.animeId}">${anime.animeTitle}</option>`,
       ""
     );
     $animes.innerHTML = html;
+    $animes.value = animes[idx]["animeId"];
+    const event = new Event("updateAnimes");
+    event.value = animes[idx];
+    console.log(animes[idx]);
+    document.dispatchEvent(event);
   }
-  function updateEpisodes(episodes) {
+  function updateEpisodes(anime) {
+    const { animeId, episodes } = anime;
     const html = episodes.reduce(
       (html2, episode2) => html2 + `<option value="${episode2.episodeId}">${episode2.episodeTitle}</option>`,
       ""
     );
     $episodes.innerHTML = html;
+    let episodeId = get_episodeId(animeId, episode);
+    $episodes.value = episodeId;
+    const event = new Event("updateEpisodes");
+    document.dispatchEvent(event);
   }
 
 })(CryptoJS, artplayerPluginDanmuku, Artplayer);

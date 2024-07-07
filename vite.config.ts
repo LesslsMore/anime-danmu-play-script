@@ -13,13 +13,15 @@ export default defineConfig({
       userscript: {
         name: '动漫网站弹幕播放',
         namespace: 'https://github.com/LesslsMore/yhdm-danmu-player-ts',
-        version: '0.3.3',
+        version: '0.3.4',
         author: 'lesslsmore',
         license: 'MIT',
         description: '自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫',
-        match: [
-          'https://www.dmla4.com/play/*',
-          'https://www.dmla5.com/play/*',
+        include: [
+          // 'https://www.dmla*.com/play/*', // 风车动漫
+          /^https:\/\/www\.dmla.*\.com\/play\/.*$/,
+          'https://www.tt776b.com/play/*', // 风车动漫
+          'https://www.dm539.com/play/*', // 樱花动漫
           // 'https://www.agedm.org/play/*',
           // 'https://43.240.156.118:8443/vip/?url=age_*',
         ],

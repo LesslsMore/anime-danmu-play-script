@@ -1,21 +1,21 @@
-import {get_yhdm_info} from './parser/get_yhdm_info'
+import {get_anime_info} from './parser/get_anime_info'
 import {get_comment, get_episodeId, get_search_episodes} from './danmu/api'
-import get_yhdm_url from './parser/get_yhdm_url'
+import get_yhdmjx_url from './parser/get_yhdmjx_url.js'
 import {add_danmu, update_danmu} from './danmu/danmu'
 import {NewPlayer, bilibiliDanmuParseFromJson} from './player/player'
 import {local} from './utils/storage'
 
-// export async function yhdm() {
+// export async function anime() {
 let url = window.location.href
 
-let {episode, title} = get_yhdm_info(url)
+let {episode, title} = get_anime_info(url)
 
-let yhdmId = url.split('-')[0]
+let animeUrl = url.split('-')[0]
 console.log(url)
 console.log(episode)
 console.log(title)
 
-let info = local.getItem(yhdmId)
+let info = local.getItem(animeUrl)
 if (info === undefined) {
     info = {
         // "animeTitle": title,
@@ -26,9 +26,9 @@ if (info === undefined) {
 }
 let src_url
 if (!info['episodes'].hasOwnProperty(url)) {
-    src_url = await get_yhdm_url(url)
+    src_url = await get_yhdmjx_url(url)
     info['episodes'][url] = src_url
-    local.setItem(yhdmId, info)
+    local.setItem(animeUrl, info)
 } else {
     src_url = info['episodes'][url]
 }
@@ -42,23 +42,21 @@ let $animeName = document.querySelector("#animeName")
 let $animes = document.querySelector("#animes")
 let $episodes = document.querySelector("#episodes")
 
-function msgs() {
-    if ($count.textContent === '') {
-        let msgs = [
-            '未搜索到番剧弹幕',
-            '请按右键菜单',
-            '手动搜索番剧名称',
-        ]
-        art.notice.show = msgs.join(',\n\n')
-    } else {
-        let msgs = [
-            `番剧：${$animes.options[$animes.selectedIndex].text}`,
-            `章节: ${$episodes.options[$episodes.selectedIndex].text}`,
-            `已加载 ${$count.textContent} 条弹幕`,
-        ]
-        art.notice.show = msgs.join('\n\n')
-    }
+function art_msgs(msgs) {
+    art.notice.show = msgs.join(',\n\n')
 }
+
+let UNSEARCHED = [
+    '未搜索到番剧弹幕',
+    '请按右键菜单',
+    '手动搜索番剧名称',
+]
+
+let SEARCHED = () => [
+    `番剧：${$animes.options[$animes.selectedIndex].text}`,
+    `章节: ${$episodes.options[$episodes.selectedIndex].text}`,
+    `已加载 ${$count.textContent} 条弹幕`,
+]
 
 init()
 get_animes()
@@ -72,13 +70,12 @@ async function update_episode_danmu() {
     let danmu = await get_comment(episodeId)
 
     let danmus = bilibiliDanmuParseFromJson(danmu)
-    // console.log('总共弹幕数目: ', danmus.length)
     update_danmu(art, danmus)
 }
 
 function get_animes() {
     const {animes, idx} = info
-    const animeTitle = animes[idx]
+    const {animeTitle} = animes[idx]
     if (!animes[idx].hasOwnProperty('animeId')) {
         console.log('没有缓存，请求接口')
         get_animes_new(animeTitle)
@@ -88,15 +85,15 @@ function get_animes() {
     }
 }
 
+// 请求接口，搜索番剧
 async function get_animes_new(title) {
     try {
         const animes = await get_search_episodes(title)
         if (animes.length === 0) {
-            console.log('未搜索到番剧')
-            // return showTips('未搜索到番剧')
+            art_msgs(UNSEARCHED)
         } else {
             info['animes'] = animes
-            local.setItem(yhdmId, info)
+            local.setItem(animeUrl, info)
         }
         return animes
     } catch (error) {
@@ -109,15 +106,19 @@ function init() {
     art.on('artplayerPluginDanmuku:loaded', (danmus) => {
         console.info('加载弹幕', danmus.length);
         $count.textContent = danmus.length
-        msgs()
+        if ($count.textContent === '') {
+            art_msgs(UNSEARCHED)
+        } else {
+            art_msgs(SEARCHED())
+        }
     });
 
-    art.on('ready', () => {
-        msgs()
-    })
-
     art.on('pause', () => {
-        msgs()
+        if ($count.textContent === '') {
+            art_msgs(UNSEARCHED)
+        } else {
+            art_msgs(SEARCHED())
+        }
     });
 
     // 监听input元素的keypress事件
@@ -140,11 +141,11 @@ function init() {
         // 存储选择的番剧序号
         if (idx_n !== idx) {
             info['idx'] = idx_n
-            local.setItem(yhdmId, info)
+            local.setItem(animeUrl, info)
             // 番剧选项变化
             updateEpisodes(animes[idx_n])
 
-            $animeName.value = info['animes'][info['idx']]['animeTitle']
+            // $animeName.value = info['animes'][info['idx']]['animeTitle']
         }
     });
 
@@ -152,7 +153,7 @@ function init() {
     $episodes.addEventListener('change', update_episode_danmu);
 
     document.addEventListener('itemInserted', function (e) {
-        let {animes: animes_o} = local.getItem(yhdmId)
+        let {animes: animes_o} = local.getItem(animeUrl)
         let {animes: animes_n, idx: idx_n} = JSON.parse(e.value)
         if (animes_n !== animes_o) {
             // 初始番剧选项与默认选择

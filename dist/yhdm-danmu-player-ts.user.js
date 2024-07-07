@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         动漫网站弹幕播放
 // @namespace    https://github.com/LesslsMore/yhdm-danmu-player-ts
-// @version      0.3.3
+// @version      0.3.4
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
 // @license      MIT
-// @match        https://www.dmla4.com/play/*
-// @match        https://www.dmla5.com/play/*
+// @include      /^https:\/\/www\.dmla.*\.com\/play\/.*$/
+// @include      https://www.tt776b.com/play/*
+// @include      https://www.dm539.com/play/*
 // @require      https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.js
 // @require      https://cdn.jsdelivr.net/npm/artplayer@5.1.1/dist/artplayer.js
 // @require      https://cdn.jsdelivr.net/npm/artplayer-plugin-danmuku@5.0.1/dist/artplayer-plugin-danmuku.js
@@ -41,13 +42,34 @@
       originalRemoveItem.apply(this, arguments);
     };
   })();
-  function get_yhdm_info(url2) {
+  function get_anime_info(url2) {
     let episode2 = url2.split("-").pop().split(".")[0];
-    let title2 = document.querySelector(".stui-player__detail.detail > h1 > a");
-    if (title2 == void 0) {
-      title2 = document.querySelector(".myui-panel__head.active.clearfix > h3 > a");
+    let include = [
+      /^https:\/\/www\.dmla.*\.com\/play\/.*$/,
+      // 风车动漫
+      "https://www.tt776b.com/play/*",
+      // 风车动漫
+      "https://www.dm539.com/play/*"
+      // 樱花动漫
+    ];
+    let els = [
+      document.querySelector(".stui-player__detail.detail > h1 > a"),
+      document.querySelector("body > div.myui-player.clearfix > div > div > div.myui-player__data.hidden-xs.clearfix > h3 > a"),
+      document.querySelector(".myui-panel__head.active.clearfix > h3 > a")
+    ];
+    let el;
+    let title2;
+    for (let i = 0; i < include.length; i++) {
+      if (url2.match(include[i])) {
+        el = els[i];
+      }
     }
-    title2 = title2.innerText;
+    if (el != void 0) {
+      title2 = el.text;
+    } else {
+      title2 = "";
+      console.log("没有自动匹配到动漫名称");
+    }
     return {
       episode: episode2,
       title: title2
@@ -116,7 +138,7 @@
   }
   const key = CryptoJS.enc.Utf8.parse("57A891D97E332A9D");
   const iv = CryptoJS.enc.Utf8.parse("844182a9dfe9c5ca");
-  async function get_yhdm_url(url2) {
+  async function get_yhdmjx_url(url2) {
     let body = await xhr_get(url2);
     let m3u8 = get_m3u8_url(body);
     if (m3u8) {
@@ -380,12 +402,12 @@
     gm = local;
   }
   let url = window.location.href;
-  let { episode, title } = get_yhdm_info(url);
-  let yhdmId = url.split("-")[0];
+  let { episode, title } = get_anime_info(url);
+  let animeUrl = url.split("-")[0];
   console.log(url);
   console.log(episode);
   console.log(title);
-  let info = local.getItem(yhdmId);
+  let info = local.getItem(animeUrl);
   if (info === void 0) {
     info = {
       // "animeTitle": title,
@@ -396,9 +418,9 @@
   }
   let src_url;
   if (!info["episodes"].hasOwnProperty(url)) {
-    src_url = await( get_yhdm_url(url));
+    src_url = await( get_yhdmjx_url(url));
     info["episodes"][url] = src_url;
-    local.setItem(yhdmId, info);
+    local.setItem(animeUrl, info);
   } else {
     src_url = info["episodes"][url];
   }
@@ -408,23 +430,19 @@
   let $animeName = document.querySelector("#animeName");
   let $animes = document.querySelector("#animes");
   let $episodes = document.querySelector("#episodes");
-  function msgs() {
-    if ($count.textContent === "") {
-      let msgs2 = [
-        "未搜索到番剧弹幕",
-        "请按右键菜单",
-        "手动搜索番剧名称"
-      ];
-      art.notice.show = msgs2.join(",\n\n");
-    } else {
-      let msgs2 = [
-        `番剧：${$animes.options[$animes.selectedIndex].text}`,
-        `章节: ${$episodes.options[$episodes.selectedIndex].text}`,
-        `已加载 ${$count.textContent} 条弹幕`
-      ];
-      art.notice.show = msgs2.join("\n\n");
-    }
+  function art_msgs(msgs) {
+    art.notice.show = msgs.join(",\n\n");
   }
+  let UNSEARCHED = [
+    "未搜索到番剧弹幕",
+    "请按右键菜单",
+    "手动搜索番剧名称"
+  ];
+  let SEARCHED = () => [
+    `番剧：${$animes.options[$animes.selectedIndex].text}`,
+    `章节: ${$episodes.options[$episodes.selectedIndex].text}`,
+    `已加载 ${$count.textContent} 条弹幕`
+  ];
   init();
   get_animes();
   async function update_episode_danmu() {
@@ -436,7 +454,7 @@
   }
   function get_animes() {
     const { animes, idx } = info;
-    const animeTitle = animes[idx];
+    const { animeTitle } = animes[idx];
     if (!animes[idx].hasOwnProperty("animeId")) {
       console.log("没有缓存，请求接口");
       get_animes_new(animeTitle);
@@ -449,10 +467,10 @@
     try {
       const animes = await get_search_episodes(title2);
       if (animes.length === 0) {
-        console.log("未搜索到番剧");
+        art_msgs(UNSEARCHED);
       } else {
         info["animes"] = animes;
-        local.setItem(yhdmId, info);
+        local.setItem(animeUrl, info);
       }
       return animes;
     } catch (error) {
@@ -463,13 +481,18 @@
     art.on("artplayerPluginDanmuku:loaded", (danmus) => {
       console.info("加载弹幕", danmus.length);
       $count.textContent = danmus.length;
-      msgs();
-    });
-    art.on("ready", () => {
-      msgs();
+      if ($count.textContent === "") {
+        art_msgs(UNSEARCHED);
+      } else {
+        art_msgs(SEARCHED());
+      }
     });
     art.on("pause", () => {
-      msgs();
+      if ($count.textContent === "") {
+        art_msgs(UNSEARCHED);
+      } else {
+        art_msgs(SEARCHED());
+      }
     });
     $animeName.addEventListener("keypress", (e) => {
       if (e.key === "Enter") {
@@ -485,14 +508,13 @@
       const { idx, animes } = info;
       if (idx_n !== idx) {
         info["idx"] = idx_n;
-        local.setItem(yhdmId, info);
+        local.setItem(animeUrl, info);
         updateEpisodes(animes[idx_n]);
-        $animeName.value = info["animes"][info["idx"]]["animeTitle"];
       }
     });
     $episodes.addEventListener("change", update_episode_danmu);
     document.addEventListener("itemInserted", function(e) {
-      let { animes: animes_o } = local.getItem(yhdmId);
+      let { animes: animes_o } = local.getItem(animeUrl);
       let { animes: animes_n, idx: idx_n } = JSON.parse(e.value);
       if (animes_n !== animes_o) {
         updateAnimes(animes_n, idx_n);

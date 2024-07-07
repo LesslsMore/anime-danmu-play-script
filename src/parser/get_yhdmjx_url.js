@@ -6,7 +6,7 @@ const key = CryptoJS.enc.Utf8.parse("57A891D97E332A9D");  //十六位十六进�
 const iv = CryptoJS.enc.Utf8.parse('844182a9dfe9c5ca');   //十六位十六进制数作为密钥偏移量
 
 // 获取原始 url
-async function get_yhdm_url(url){
+async function get_yhdmjx_url(url){
     let body = await xhr_get(url)
  //    console.log(body)
     let m3u8 = get_m3u8_url(body)
@@ -15,14 +15,14 @@ async function get_yhdm_url(url){
          let body = await xhr_get(m3u8)
          let aes_data = get_encode_url(body)
          if (aes_data) {
- 
+
              let url = Decrypt(aes_data)
              // console.log(url)
              let src = url.split('.net/')[1]
              let src_url = `http://v16m-default.akamaized.net/${src}`
              console.log('原始地址：')
              console.log(src_url)
-             return src_url            
+             return src_url
          }
      }
  }
@@ -32,10 +32,10 @@ function get_m3u8_url(data) {
     let regex = /"url":"([^"]+)","url_next":"([^"]+)"/g;
 
     const matches = data.match(regex);
-  
+
     if (matches) {
       let play = JSON.parse(`{${matches[0]}}`)
-  
+
       let m3u8 = `https://danmu.yhdmjx.com/m3u8.php?url=${play.url}`
       console.log(m3u8)
       return m3u8
@@ -47,9 +47,9 @@ function get_m3u8_url(data) {
 // 匹配加密 url
 function get_encode_url(data) {
     let regex = /getVideoInfo\("([^"]+)"/;
-    
+
     const matches = data.match(regex);
-  
+
     if (matches) {
         return matches[1]
     } else {
@@ -66,4 +66,4 @@ function Decrypt(srcs) {
     return decryptedStr.toString();
 }
 
-export default get_yhdm_url;
+export default get_yhdmjx_url;

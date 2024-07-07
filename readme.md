@@ -22,7 +22,7 @@
 
 自动匹配加载动漫剧集对应弹幕并播放，弹幕加载和播放暂停时会显示番剧弹幕信息
 
-![](https://raw.githubusercontent.com/LesslsMore/yhdm-danmu-player-ts/master/doc/img1.png)
+![](https://raw.githubusercontent.com/LesslsMore/anime-danmu-play/master/doc/img1.png)
 
 ### 手动搜索弹幕
 
@@ -30,13 +30,13 @@
 
 在视频任意位置右键，打开菜单，将搜索番剧名称改为 girls band cry 后，按下回车键，会重新加载当前集数的弹幕
 
-![](https://raw.githubusercontent.com/LesslsMore/yhdm-danmu-player-ts/master/doc/img3.png)
+![](https://raw.githubusercontent.com/LesslsMore/anime-danmu-play/master/doc/img3.png)
 
 又例如 无职转生第二季 part2 未搜索到番剧弹幕，按照上面同样的方式，
 
 将搜索名称改为 无职转生 后，按下回车键，选择 无职转生第二季 part2 后，会自动加载当前集数的弹幕
 
-![](https://raw.githubusercontent.com/LesslsMore/yhdm-danmu-player-ts/master/doc/img5.png)
+![](https://raw.githubusercontent.com/LesslsMore/anime-danmu-play/master/doc/img5.png)
 
 又例如 魔法科高校的劣等生第三季 未搜索到番剧弹幕，按照上面同样的方式，
 
@@ -50,7 +50,7 @@
 
 如果有本地下载好的弹幕，可以点击上传弹幕，添加 xml 格式本地弹幕
 
-![](https://raw.githubusercontent.com/LesslsMore/yhdm-danmu-player-ts/master/doc/img2.png)
+![](https://raw.githubusercontent.com/LesslsMore/anime-danmu-play/master/doc/img2.png)
 
 ### 主要原理
 
@@ -60,7 +60,7 @@
 
 出现如下界面，请点击总是允许此域名，该操作获取弹幕相关数据
 
-![](https://raw.githubusercontent.com/LesslsMore/yhdm-danmu-player-ts/master/doc/img4.png)
+![](https://raw.githubusercontent.com/LesslsMore/anime-danmu-play/master/doc/img4.png)
 
 ### 特别鸣谢
 

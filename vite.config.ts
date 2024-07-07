@@ -11,8 +11,8 @@ export default defineConfig({
     monkey({
       entry: 'src/main.js',
       userscript: {
-        name: '动漫网站弹幕播放',
-        namespace: 'https://github.com/LesslsMore/yhdm-danmu-player-ts',
+        name: '动漫弹幕播放',
+        namespace: 'https://github.com/LesslsMore/anime-danmu-play',
         version: '0.3.4',
         author: 'lesslsmore',
         license: 'MIT',

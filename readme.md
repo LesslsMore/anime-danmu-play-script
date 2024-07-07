@@ -1,9 +1,9 @@
-# 动漫网站弹幕播放
+# 动漫弹幕播放
 
 自动匹配加载动漫剧集对应弹幕并播放，目前支持风车动漫、樱花动漫
 
 ### 支持网站
-- 风车动漫 https://www.dmla6.com/、https://www.tt776b.com/
+- 风车动漫 https://www.dmla6.com/ https://www.tt776b.com/
 - 樱花动漫 https://www.dm539.com/
 
 风车动漫地址永久发布页 https://www.dmla.fans/

@@ -84,7 +84,7 @@ https://greasyfork.org/zh-CN/scripts/485364
 
 欢迎提交问题与反馈！
 
-[issue](https://github.com/LesslsMore/yhdm-danmu-player-ts/issues)
+[issue](https://github.com/LesslsMore/anime-danmu-play/issues)
 
 [feedback](https://greasyfork.org/zh-CN/scripts/485364/feedback)
 

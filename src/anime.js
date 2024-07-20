@@ -52,11 +52,18 @@ let UNSEARCHED = [
     '手动搜索番剧名称',
 ]
 
-let SEARCHED = () => [
-    `番剧：${$animes.options[$animes.selectedIndex].text}`,
-    `章节: ${$episodes.options[$episodes.selectedIndex].text}`,
-    `已加载 ${$count.textContent} 条弹幕`,
-]
+let SEARCHED = () => {
+    try {
+        return [
+            `番剧：${$animes.options[$animes.selectedIndex].text}`,
+            `章节: ${$episodes.options[$episodes.selectedIndex].text}`,
+            `已加载 ${$count.textContent} 条弹幕`,
+        ]
+    } catch (e) {
+        console.log(e)
+        return []
+    }
+}
 
 init()
 get_animes()

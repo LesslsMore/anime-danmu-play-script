@@ -41,8 +41,6 @@ function NewPlayer(src_url) {
                         reader.readAsText(input.files[0]);
                     });
                     input.click();
-
-
                 },
             },
         ],

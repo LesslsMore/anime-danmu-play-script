@@ -50,7 +50,9 @@
 
 如果有本地下载好的弹幕，可以点击上传弹幕，添加 xml 格式本地弹幕
 
-![](https://raw.githubusercontent.com/LesslsMore/anime-danmu-play/master/doc/img2.png)
+例如 我的三体第四季 弹弹 play 没有收录，可以手动下载对应 bilibili 对应弹幕，手动上传弹幕观看
+
+![](https://raw.githubusercontent.com/LesslsMore/anime-danmu-play/master/doc/img6.png)
 
 ### 主要原理
 
@@ -72,6 +74,8 @@ https://greasyfork.org/zh-CN/scripts/485364
 
 ### 更新记录
 
+0.3.5 优化手动上传弹幕
+
 0.3.4 优化支持更多网站，添加网站及发布地址说明
 
 0.3.3 优化完善手动搜索番剧选择功能，代码优化为事件驱动
@@ -79,6 +83,11 @@ https://greasyfork.org/zh-CN/scripts/485364
 0.3.2 显示弹幕信息，添加缓存，优化性能，记录选择的番剧
 
 0.3.1 优化完善手动搜索剧集选择功能
+
+### todo
+- 观看时间，历史记录 
+- 弹幕发送
+- 支持搜索 bilibili 弹幕
 
 ### 最后
 

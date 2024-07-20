@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         动漫弹幕播放
 // @namespace    https://github.com/LesslsMore/anime-danmu-play
-// @version      0.3.4
+// @version      0.3.5
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
 // @license      MIT
@@ -438,11 +438,18 @@
     "请按右键菜单",
     "手动搜索番剧名称"
   ];
-  let SEARCHED = () => [
-    `番剧：${$animes.options[$animes.selectedIndex].text}`,
-    `章节: ${$episodes.options[$episodes.selectedIndex].text}`,
-    `已加载 ${$count.textContent} 条弹幕`
-  ];
+  let SEARCHED = () => {
+    try {
+      return [
+        `番剧：${$animes.options[$animes.selectedIndex].text}`,
+        `章节: ${$episodes.options[$episodes.selectedIndex].text}`,
+        `已加载 ${$count.textContent} 条弹幕`
+      ];
+    } catch (e) {
+      console.log(e);
+      return [];
+    }
+  };
   init();
   get_animes();
   async function update_episode_danmu() {

@@ -11,6 +11,7 @@
 // @require      https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.js
 // @require      https://cdn.jsdelivr.net/npm/artplayer@5.1.1/dist/artplayer.js
 // @require      https://cdn.jsdelivr.net/npm/artplayer-plugin-danmuku@5.0.1/dist/artplayer-plugin-danmuku.js
+// @require      https://cdn.jsdelivr.net/npm/dexie@4.0.8/dist/dexie.min.js
 // @connect      https://api.dandanplay.net/*
 // @connect      https://danmu.yhdmjx.com/*
 // @connect      http://v16m-default.akamaized.net/*
@@ -22,7 +23,7 @@
 // @run-at       document-end
 // ==/UserScript==
 
-(async function (CryptoJS, artplayerPluginDanmuku, Artplayer) {
+(async function (CryptoJS, artplayerPluginDanmuku, Artplayer, Dexie) {
   'use strict';
 
   (function() {
@@ -401,15 +402,63 @@
   } catch (error) {
     gm = local;
   }
+  const db_name = "anime";
+  const db_schema = {
+    yhdm: "&anime_id"
+    // 主键 索引
+  };
+  const db_obj = {
+    [db_name]: get_db(db_name, db_schema)
+  };
+  const db_yhdm = db_obj[db_name].yhdm;
+  function get_db(db_name2, db_schema2, db_ver = 1) {
+    let db = new Dexie(db_name2);
+    db.version(db_ver).stores(db_schema2);
+    return db;
+  }
+  const originalPut = db_yhdm.put.bind(db_yhdm);
+  const originalGet = db_yhdm.get.bind(db_yhdm);
+  db_yhdm.put = async function(key2, value, expiryInMinutes = 60) {
+    const now = /* @__PURE__ */ new Date();
+    const item = {
+      anime_id: key2,
+      value,
+      expiry: now.getTime() + expiryInMinutes * 6e4
+    };
+    const result = await originalPut(item);
+    const event = new Event("db_yhdm_put");
+    event.key = key2;
+    event.value = value;
+    document.dispatchEvent(event);
+    return result;
+  };
+  db_yhdm.get = async function(key2) {
+    const item = await originalGet(key2);
+    console.log(item);
+    const event = new Event("db_yhdm_get");
+    event.key = key2;
+    event.value = item ? item.value : null;
+    document.dispatchEvent(event);
+    if (!item) {
+      return null;
+    }
+    const now = /* @__PURE__ */ new Date();
+    if (now.getTime() > item.expiry) {
+      await db_yhdm.delete(key2);
+      return null;
+    }
+    return item.value;
+  };
   let url = window.location.href;
   let { episode, title } = get_anime_info(url);
-  let animeUrl = url.split("-")[0];
+  let anime_url = url.split("-")[0];
+  let anime_id = parseInt(anime_url.split("/")[4]);
   console.log(url);
   console.log(episode);
   console.log(title);
-  let info = local.getItem(animeUrl);
-  if (info === void 0) {
-    info = {
+  let anime_info = await( db_yhdm.get(anime_id));
+  if (anime_info === null) {
+    anime_info = {
       // "animeTitle": title,
       "episodes": {},
       "animes": [{ "animeTitle": title }],
@@ -417,12 +466,12 @@
     };
   }
   let src_url;
-  if (!info["episodes"].hasOwnProperty(url)) {
+  if (!anime_info["episodes"].hasOwnProperty(url)) {
     src_url = await( get_yhdmjx_url(url));
-    info["episodes"][url] = src_url;
-    local.setItem(animeUrl, info);
+    anime_info["episodes"][url] = src_url;
+    db_yhdm.put(anime_id, anime_info);
   } else {
-    src_url = info["episodes"][url];
+    src_url = anime_info["episodes"][url];
   }
   let art = NewPlayer(src_url);
   add_danmu(art);
@@ -460,7 +509,7 @@
     update_danmu(art, danmus);
   }
   function get_animes() {
-    const { animes, idx } = info;
+    const { animes, idx } = anime_info;
     const { animeTitle } = animes[idx];
     if (!animes[idx].hasOwnProperty("animeId")) {
       console.log("没有缓存，请求接口");
@@ -476,8 +525,8 @@
       if (animes.length === 0) {
         art_msgs(UNSEARCHED);
       } else {
-        info["animes"] = animes;
-        local.setItem(animeUrl, info);
+        anime_info["animes"] = animes;
+        db_yhdm.put(anime_id, anime_info);
       }
       return animes;
     } catch (error) {
@@ -509,22 +558,22 @@
     $animeName.addEventListener("blur", () => {
       get_animes_new($animeName.value);
     });
-    $animeName.value = info["animes"][info["idx"]]["animeTitle"];
+    $animeName.value = anime_info["animes"][anime_info["idx"]]["animeTitle"];
     $animes.addEventListener("change", async () => {
-      const idx_n = $animes.selectedIndex;
-      const { idx, animes } = info;
-      if (idx_n !== idx) {
-        info["idx"] = idx_n;
-        local.setItem(animeUrl, info);
-        updateEpisodes(animes[idx_n]);
+      const new_idx = $animes.selectedIndex;
+      const { idx, animes } = anime_info;
+      if (new_idx !== idx) {
+        anime_info["idx"] = new_idx;
+        db_yhdm.put(anime_id, anime_info);
+        updateEpisodes(animes[new_idx]);
       }
     });
     $episodes.addEventListener("change", update_episode_danmu);
-    document.addEventListener("itemInserted", function(e) {
-      let { animes: animes_o } = local.getItem(animeUrl);
-      let { animes: animes_n, idx: idx_n } = JSON.parse(e.value);
-      if (animes_n !== animes_o) {
-        updateAnimes(animes_n, idx_n);
+    document.addEventListener("db_yhdm_put", async function(e) {
+      let { animes: old_animes } = await db_yhdm.get(anime_id);
+      let { animes: new_animes, idx: new_idx } = e.value;
+      if (new_animes !== old_animes) {
+        updateAnimes(new_animes, new_idx);
       }
     });
     document.addEventListener("updateAnimes", function(e) {
@@ -561,4 +610,4 @@
     document.dispatchEvent(event);
   }
 
-})(CryptoJS, artplayerPluginDanmuku, Artplayer);
+})(CryptoJS, artplayerPluginDanmuku, Artplayer, Dexie);

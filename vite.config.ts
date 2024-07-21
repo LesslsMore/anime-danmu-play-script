@@ -39,6 +39,7 @@ export default defineConfig({
           'crypto-js': cdn.jsdelivr('CryptoJS', 'crypto-js.js'),
           'artplayer': cdn.jsdelivr('Artplayer', 'dist/artplayer.js'),
           'artplayer-plugin-danmuku': cdn.jsdelivr('artplayerPluginDanmuku', 'dist/artplayer-plugin-danmuku.js'),
+          'dexie': cdn.jsdelivr('Dexie', 'dist/dexie.min.js'),
         },
       },
     }),

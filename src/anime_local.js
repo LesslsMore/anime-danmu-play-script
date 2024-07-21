@@ -4,23 +4,20 @@ import get_yhdmjx_url from './parser/get_yhdmjx_url.js'
 import {add_danmu, update_danmu} from './danmu/danmu'
 import {NewPlayer, bilibiliDanmuParseFromJson} from './player/player'
 import {local} from './utils/storage'
-import {db_yhdm} from "./utils/db.js";
 
 // export async function anime() {
 let url = window.location.href
 
 let {episode, title} = get_anime_info(url)
 
-let anime_url = url.split('-')[0]
-let anime_id = parseInt(anime_url.split('/')[4])
+let animeUrl = url.split('-')[0]
 console.log(url)
 console.log(episode)
 console.log(title)
 
-let anime_info = await db_yhdm.get(anime_id)
-
-if (anime_info === null) {
-    anime_info = {
+let info = local.getItem(animeUrl)
+if (info === undefined) {
+    info = {
         // "animeTitle": title,
         "episodes": {},
         'animes': [{'animeTitle': title}],
@@ -28,13 +25,12 @@ if (anime_info === null) {
     }
 }
 let src_url
-if (!anime_info['episodes'].hasOwnProperty(url)) {
+if (!info['episodes'].hasOwnProperty(url)) {
     src_url = await get_yhdmjx_url(url)
-    anime_info['episodes'][url] = src_url
-    // 更新解析地址
-    db_yhdm.put(anime_id, anime_info)
+    info['episodes'][url] = src_url
+    local.setItem(animeUrl, info)
 } else {
-    src_url = anime_info['episodes'][url]
+    src_url = info['episodes'][url]
 }
 
 // let src_url = `http://v16m-default.akamaized.net/c79b338a02bcdfb62404a09a37974c78/66534a94/video/tos/alisg/tos-alisg-ve-0051c001-sg/oU42Rof2MAD5TKRPC2LIA2G5GHAbP8hIQPeeg6/?a=2011&bti=MzhALjBg&ch=0&cr=0&dr=0&net=5&cd=0%7C0%7C0%7C0&br=3316&bt=1658&cs=0&ds=4&ft=XE5bCqT0mmjPD12xNBo73wU7C1JcMeF~O5&mime_type=video_mp4&qs=0&rc=Zzw8NTw4ODU8NmhoPDw8PEBpajhreXc5cnF3cjMzODYzNEBgLTUzLjRgXy4xNjBfMjZeYSNhcmRlMmQ0YTRgLS1kMC1zcw%3D%3D&vvpl=1&l=20240526081952FCF254249B5F97C1A570&btag=e000a8000`
@@ -85,7 +81,7 @@ async function update_episode_danmu() {
 }
 
 function get_animes() {
-    const {animes, idx} = anime_info
+    const {animes, idx} = info
     const {animeTitle} = animes[idx]
     if (!animes[idx].hasOwnProperty('animeId')) {
         console.log('没有缓存，请求接口')
@@ -103,9 +99,8 @@ async function get_animes_new(title) {
         if (animes.length === 0) {
             art_msgs(UNSEARCHED)
         } else {
-            anime_info['animes'] = animes
-            // 更新搜索剧集
-            db_yhdm.put(anime_id, anime_info)
+            info['animes'] = animes
+            local.setItem(animeUrl, info)
         }
         return animes
     } catch (error) {
@@ -144,33 +139,32 @@ function init() {
         get_animes_new($animeName.value)
     });
     // 初始搜索番剧默认名称
-    $animeName.value = anime_info['animes'][anime_info['idx']]['animeTitle']
+    $animeName.value = info['animes'][info['idx']]['animeTitle']
 
     $animes.addEventListener('change', async () => {
         // 获取选中的值
-        const new_idx = $animes.selectedIndex
-        const {idx, animes} = anime_info
+        const idx_n = $animes.selectedIndex
+        const {idx, animes} = info
         // 存储选择的番剧序号
-        if (new_idx !== idx) {
-            anime_info['idx'] = new_idx
-            // 更新选择的剧集
-            db_yhdm.put(anime_id, anime_info)
+        if (idx_n !== idx) {
+            info['idx'] = idx_n
+            local.setItem(animeUrl, info)
             // 番剧选项变化
-            updateEpisodes(animes[new_idx])
+            updateEpisodes(animes[idx_n])
 
-            // $animeName.value = anime_info['animes'][anime_info['idx']]['animeTitle']
+            // $animeName.value = info['animes'][info['idx']]['animeTitle']
         }
     });
 
     // 监听input元素的keypress事件
     $episodes.addEventListener('change', update_episode_danmu);
 
-    document.addEventListener('db_yhdm_put', async function (e) {
-        let {animes: old_animes} = await db_yhdm.get(anime_id)
-        let {animes: new_animes, idx: new_idx} = e.value
-        if (new_animes !== old_animes) {
+    document.addEventListener('itemInserted', function (e) {
+        let {animes: animes_o} = local.getItem(animeUrl)
+        let {animes: animes_n, idx: idx_n} = JSON.parse(e.value)
+        if (animes_n !== animes_o) {
             // 初始番剧选项与默认选择
-            updateAnimes(new_animes, new_idx)
+            updateAnimes(animes_n, idx_n)
         }
     });
 

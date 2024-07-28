@@ -35,7 +35,7 @@ export async function get_danmus(title, id) {
 }
 
 export function get_episodeId(animeId, id) {
-    id = id.padStart(4, "0");
+    id = id.toString().padStart(4, "0");
     let episodeId = `${animeId}${id}`
     return episodeId
 }

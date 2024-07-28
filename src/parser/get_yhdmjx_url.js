@@ -20,8 +20,6 @@ async function get_yhdmjx_url(url){
              // console.log(url)
              let src = url.split('.net/')[1]
              let src_url = `http://v16m-default.akamaized.net/${src}`
-             console.log('原始地址：')
-             console.log(src_url)
              return src_url
          }
      }
@@ -37,7 +35,7 @@ function get_m3u8_url(data) {
       let play = JSON.parse(`{${matches[0]}}`)
 
       let m3u8 = `https://danmu.yhdmjx.com/m3u8.php?url=${play.url}`
-      console.log(m3u8)
+      console.log('m3u8', m3u8)
       return m3u8
     } else {
       console.log('No matches found.');

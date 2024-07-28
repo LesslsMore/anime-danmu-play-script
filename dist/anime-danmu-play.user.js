@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         动漫弹幕播放
 // @namespace    https://github.com/LesslsMore/anime-danmu-play
-// @version      0.3.5
+// @version      0.3.6
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
 // @license      MIT
@@ -44,7 +44,7 @@
     };
   })();
   function get_anime_info(url2) {
-    let episode2 = url2.split("-").pop().split(".")[0];
+    let episode2 = parseInt(url2.split("-").pop().split(".")[0]);
     let include = [
       /^https:\/\/www\.dmla.*\.com\/play\/.*$/,
       // 风车动漫
@@ -120,7 +120,7 @@
   let API_comment = "/api/v2/comment/";
   let API_search_episodes = `/api/v2/search/episodes`;
   function get_episodeId(animeId, id) {
-    id = id.padStart(4, "0");
+    id = id.toString().padStart(4, "0");
     let episodeId = `${animeId}${id}`;
     return episodeId;
   }
@@ -149,8 +149,6 @@
         let url3 = Decrypt(aes_data);
         let src = url3.split(".net/")[1];
         let src_url2 = `http://v16m-default.akamaized.net/${src}`;
-        console.log("原始地址：");
-        console.log(src_url2);
         return src_url2;
       }
     }
@@ -161,7 +159,7 @@
     if (matches) {
       let play = JSON.parse(`{${matches[0]}}`);
       let m3u8 = `https://danmu.yhdmjx.com/m3u8.php?url=${play.url}`;
-      console.log(m3u8);
+      console.log("m3u8", m3u8);
       return m3u8;
     } else {
       console.log("No matches found.");
@@ -404,37 +402,39 @@
   }
   const db_name = "anime";
   const db_schema = {
-    yhdm: "&anime_id"
+    info: "&anime_id",
+    // 主键 索引
+    url: "&anime_id"
     // 主键 索引
   };
   const db_obj = {
     [db_name]: get_db(db_name, db_schema)
   };
-  const db_yhdm = db_obj[db_name].yhdm;
+  const db_url = db_obj[db_name].url;
+  const db_info = db_obj[db_name].info;
   function get_db(db_name2, db_schema2, db_ver = 1) {
     let db = new Dexie(db_name2);
     db.version(db_ver).stores(db_schema2);
     return db;
   }
-  const originalPut = db_yhdm.put.bind(db_yhdm);
-  const originalGet = db_yhdm.get.bind(db_yhdm);
-  db_yhdm.put = async function(key2, value, expiryInMinutes = 60) {
+  const db_url_put = db_url.put.bind(db_url);
+  const db_url_get = db_url.get.bind(db_url);
+  db_url.put = async function(key2, value, expiryInMinutes = 60) {
     const now = /* @__PURE__ */ new Date();
     const item = {
       anime_id: key2,
       value,
       expiry: now.getTime() + expiryInMinutes * 6e4
     };
-    const result = await originalPut(item);
+    const result = await db_url_put(item);
     const event = new Event("db_yhdm_put");
     event.key = key2;
     event.value = value;
     document.dispatchEvent(event);
     return result;
   };
-  db_yhdm.get = async function(key2) {
-    const item = await originalGet(key2);
-    console.log(item);
+  db_url.get = async function(key2) {
+    const item = await db_url_get(key2);
     const event = new Event("db_yhdm_get");
     event.key = key2;
     event.value = item ? item.value : null;
@@ -444,7 +444,32 @@
     }
     const now = /* @__PURE__ */ new Date();
     if (now.getTime() > item.expiry) {
-      await db_yhdm.delete(key2);
+      await db_url.delete(key2);
+      return null;
+    }
+    return item.value;
+  };
+  const db_info_put = db_info.put.bind(db_info);
+  const db_info_get = db_info.get.bind(db_info);
+  db_info.put = async function(key2, value) {
+    const item = {
+      anime_id: key2,
+      value
+    };
+    const result = await db_info_put(item);
+    const event = new Event("db_info_put");
+    event.key = key2;
+    event.value = value;
+    document.dispatchEvent(event);
+    return result;
+  };
+  db_info.get = async function(key2) {
+    const item = await db_info_get(key2);
+    const event = new Event("db_info_get");
+    event.key = key2;
+    event.value = item ? item.value : null;
+    document.dispatchEvent(event);
+    if (!item) {
       return null;
     }
     return item.value;
@@ -456,23 +481,36 @@
   console.log(url);
   console.log(episode);
   console.log(title);
-  let anime_info = await( db_yhdm.get(anime_id));
-  if (anime_info === null) {
-    anime_info = {
-      // "animeTitle": title,
-      "episodes": {},
-      "animes": [{ "animeTitle": title }],
-      "idx": 0
-    };
+  let db_anime_url = {
+    "episodes": {}
+  };
+  let db_url_value = await( db_url.get(anime_id));
+  if (db_url_value != null) {
+    db_anime_url = db_url_value;
   }
   let src_url;
-  if (!anime_info["episodes"].hasOwnProperty(url)) {
+  if (!db_anime_url["episodes"].hasOwnProperty(url)) {
     src_url = await( get_yhdmjx_url(url));
-    anime_info["episodes"][url] = src_url;
-    db_yhdm.put(anime_id, anime_info);
+    if (src_url) {
+      db_anime_url["episodes"][url] = src_url;
+      db_url.put(anime_id, db_anime_url);
+    }
   } else {
-    src_url = anime_info["episodes"][url];
+    src_url = db_anime_url["episodes"][url];
   }
+  let db_anime_info = {
+    "animes": [{ "animeTitle": title }],
+    "idx": 0,
+    "episode_dif": 0
+  };
+  let db_info_value = await( db_info.get(anime_id));
+  if (db_info_value != null) {
+    db_anime_info = db_info_value;
+  } else {
+    db_info.put(anime_id, db_anime_info);
+  }
+  console.log("db_anime_info", db_anime_info);
+  console.log("src_url", src_url);
   let art = NewPlayer(src_url);
   add_danmu(art);
   let $count = document.querySelector("#count");
@@ -482,18 +520,10 @@
   function art_msgs(msgs) {
     art.notice.show = msgs.join(",\n\n");
   }
-  let UNSEARCHED = [
-    "未搜索到番剧弹幕",
-    "请按右键菜单",
-    "手动搜索番剧名称"
-  ];
+  let UNSEARCHED = ["未搜索到番剧弹幕", "请按右键菜单", "手动搜索番剧名称"];
   let SEARCHED = () => {
     try {
-      return [
-        `番剧：${$animes.options[$animes.selectedIndex].text}`,
-        `章节: ${$episodes.options[$episodes.selectedIndex].text}`,
-        `已加载 ${$count.textContent} 条弹幕`
-      ];
+      return [`番剧：${$animes.options[$animes.selectedIndex].text}`, `章节: ${$episodes.options[$episodes.selectedIndex].text}`, `已加载 ${$count.textContent} 条弹幕`];
     } catch (e) {
       console.log(e);
       return [];
@@ -502,6 +532,14 @@
   init();
   get_animes();
   async function update_episode_danmu() {
+    const new_idx = $episodes.selectedIndex;
+    const db_anime_info2 = await db_info.get(anime_id);
+    const { episode_dif } = db_anime_info2;
+    let dif = new_idx + 1 - episode;
+    if (dif !== episode_dif) {
+      db_anime_info2["episode_dif"] = dif;
+      db_info.put(anime_id, db_anime_info2);
+    }
     const episodeId = $episodes.value;
     console.log("episodeId: ", episodeId);
     let danmu = await get_comment(episodeId);
@@ -509,7 +547,7 @@
     update_danmu(art, danmus);
   }
   function get_animes() {
-    const { animes, idx } = anime_info;
+    const { animes, idx } = db_anime_info;
     const { animeTitle } = animes[idx];
     if (!animes[idx].hasOwnProperty("animeId")) {
       console.log("没有缓存，请求接口");
@@ -525,8 +563,8 @@
       if (animes.length === 0) {
         art_msgs(UNSEARCHED);
       } else {
-        anime_info["animes"] = animes;
-        db_yhdm.put(anime_id, anime_info);
+        db_anime_info["animes"] = animes;
+        db_info.put(anime_id, db_anime_info);
       }
       return animes;
     } catch (error) {
@@ -558,19 +596,19 @@
     $animeName.addEventListener("blur", () => {
       get_animes_new($animeName.value);
     });
-    $animeName.value = anime_info["animes"][anime_info["idx"]]["animeTitle"];
+    $animeName.value = db_anime_info["animes"][db_anime_info["idx"]]["animeTitle"];
     $animes.addEventListener("change", async () => {
       const new_idx = $animes.selectedIndex;
-      const { idx, animes } = anime_info;
+      const { idx, animes } = db_anime_info;
       if (new_idx !== idx) {
-        anime_info["idx"] = new_idx;
-        db_yhdm.put(anime_id, anime_info);
+        db_anime_info["idx"] = new_idx;
+        db_info.put(anime_id, db_anime_info);
         updateEpisodes(animes[new_idx]);
       }
     });
     $episodes.addEventListener("change", update_episode_danmu);
-    document.addEventListener("db_yhdm_put", async function(e) {
-      let { animes: old_animes } = await db_yhdm.get(anime_id);
+    document.addEventListener("db_info_put", async function(e) {
+      let { animes: old_animes } = await db_info.get(anime_id);
       let { animes: new_animes, idx: new_idx } = e.value;
       if (new_animes !== old_animes) {
         updateAnimes(new_animes, new_idx);
@@ -586,10 +624,7 @@
     });
   }
   function updateAnimes(animes, idx) {
-    const html = animes.reduce(
-      (html2, anime) => html2 + `<option value="${anime.animeId}">${anime.animeTitle}</option>`,
-      ""
-    );
+    const html = animes.reduce((html2, anime) => html2 + `<option value="${anime.animeId}">${anime.animeTitle}</option>`, "");
     $animes.innerHTML = html;
     $animes.value = animes[idx]["animeId"];
     const event = new Event("updateAnimes");
@@ -597,14 +632,13 @@
     console.log(animes[idx]);
     document.dispatchEvent(event);
   }
-  function updateEpisodes(anime) {
+  async function updateEpisodes(anime) {
     const { animeId, episodes } = anime;
-    const html = episodes.reduce(
-      (html2, episode2) => html2 + `<option value="${episode2.episodeId}">${episode2.episodeTitle}</option>`,
-      ""
-    );
+    const html = episodes.reduce((html2, episode2) => html2 + `<option value="${episode2.episodeId}">${episode2.episodeTitle}</option>`, "");
     $episodes.innerHTML = html;
-    let episodeId = get_episodeId(animeId, episode);
+    const db_anime_info2 = await db_info.get(anime_id);
+    const { episode_dif } = db_anime_info2;
+    let episodeId = get_episodeId(animeId, episode_dif + episode);
     $episodes.value = episodeId;
     const event = new Event("updateEpisodes");
     document.dispatchEvent(event);

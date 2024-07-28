@@ -1,5 +1,5 @@
 export function get_anime_info(url) {
-    let episode = url.split('-').pop().split('.')[0]
+    let episode = parseInt(url.split('-').pop().split('.')[0])
     let include = [
             /^https:\/\/www\.dmla.*\.com\/play\/.*$/, // 风车动漫
             'https://www.tt776b.com/play/*', // 风车动漫

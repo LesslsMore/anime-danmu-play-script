@@ -3,14 +3,16 @@ import Dexie from 'dexie'
 const db_name = 'anime'
 
 const db_schema = {
-    yhdm: '&anime_id', // 主键 索引
+    info: '&anime_id', // 主键 索引
+    url: '&anime_id', // 主键 索引
 }
 
 const db_obj = {
     [db_name]: get_db(db_name, db_schema)
 }
 
-const db_yhdm = db_obj[db_name].yhdm
+const db_url = db_obj[db_name].url
+const db_info = db_obj[db_name].info
 
 function get_db(db_name, db_schema, db_ver = 1) {
     let db = new Dexie(db_name)
@@ -20,11 +22,11 @@ function get_db(db_name, db_schema, db_ver = 1) {
 }
 
 // 原始的 Dexie put 和 get 方法
-const originalPut = db_yhdm.put.bind(db_yhdm);
-const originalGet = db_yhdm.get.bind(db_yhdm);
+const db_url_put = db_url.put.bind(db_url);
+const db_url_get = db_url.get.bind(db_url);
 
 // 封装 put 方法
-db_yhdm.put = async function(key, value, expiryInMinutes = 60) {
+db_url.put = async function(key, value, expiryInMinutes = 60) {
     const now = new Date();
     const item = {
         anime_id: key,
@@ -32,7 +34,7 @@ db_yhdm.put = async function(key, value, expiryInMinutes = 60) {
         expiry: now.getTime() + expiryInMinutes * 60000
     };
 
-    const result = await originalPut(item);
+    const result = await db_url_put(item);
 
     const event = new Event('db_yhdm_put');
     event.key = key;
@@ -43,9 +45,9 @@ db_yhdm.put = async function(key, value, expiryInMinutes = 60) {
 };
 
 // 封装 get 方法
-db_yhdm.get = async function(key) {
-    const item = await originalGet(key);
-    console.log(item)
+db_url.get = async function(key) {
+    const item = await db_url_get(key);
+    // console.log(item)
     const event = new Event('db_yhdm_get');
     event.key = key;
     event.value = item ? item.value : null;
@@ -56,7 +58,43 @@ db_yhdm.get = async function(key) {
     }
     const now = new Date();
     if (now.getTime() > item.expiry) {
-        await db_yhdm.delete(key);
+        await db_url.delete(key);
+        return null;
+    }
+    return item.value;
+};
+
+// 原始的 Dexie put 和 get 方法
+const db_info_put = db_info.put.bind(db_info);
+const db_info_get = db_info.get.bind(db_info);
+
+// 封装 put 方法
+db_info.put = async function(key, value) {
+    const item = {
+        anime_id: key,
+        value: value,
+    };
+
+    const result = await db_info_put(item);
+
+    const event = new Event('db_info_put');
+    event.key = key;
+    event.value = value;
+    document.dispatchEvent(event);
+
+    return result;
+};
+
+// 封装 get 方法
+db_info.get = async function(key) {
+    const item = await db_info_get(key);
+    // console.log(item)
+    const event = new Event('db_info_get');
+    event.key = key;
+    event.value = item ? item.value : null;
+    document.dispatchEvent(event);
+
+    if (!item) {
         return null;
     }
     return item.value;
@@ -77,5 +115,5 @@ db_yhdm.get = async function(key) {
 //     console.log(value);
 // })();
 
-export {db_yhdm}
+export {db_url, db_info}
 

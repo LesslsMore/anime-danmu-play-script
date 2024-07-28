@@ -76,6 +76,18 @@
       title: title2
     };
   }
+  function re_render(container) {
+    let player = document.querySelector(".stui-player__video.clearfix");
+    if (player == void 0) {
+      player = document.querySelector("#player-left");
+    }
+    let div = player.querySelector("div");
+    let h = div.offsetHeight;
+    let w = div.offsetWidth;
+    player.removeChild(div);
+    let app = `<div style="height: ${h}px; width: ${w}px;" class="${container}"></div>`;
+    player.innerHTML = app;
+  }
   var _GM_getValue = /* @__PURE__ */ (() => typeof GM_getValue != "undefined" ? GM_getValue : void 0)();
   var _GM_setValue = /* @__PURE__ */ (() => typeof GM_setValue != "undefined" ? GM_setValue : void 0)();
   var _GM_xmlhttpRequest = /* @__PURE__ */ (() => typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : void 0)();
@@ -235,10 +247,9 @@
     art2.on("artplayerPluginDanmuku:config", (option) => {
     });
   }
-  function NewPlayer(src_url2) {
-    re_render();
+  function NewPlayer(src_url2, container) {
     var art2 = new Artplayer({
-      container: ".artplayer-app",
+      container,
       url: src_url2,
       // autoplay: true,
       // muted: true,
@@ -306,18 +317,6 @@
       ]
     });
     return art2;
-  }
-  function re_render() {
-    let player = document.querySelector(".stui-player__video.clearfix");
-    if (player == void 0) {
-      player = document.querySelector("#player-left");
-    }
-    let div = player.querySelector("div");
-    let h = div.offsetHeight;
-    let w = div.offsetWidth;
-    player.removeChild(div);
-    let app = `<div style="height: ${h}px; width: ${w}px;" class="artplayer-app"></div>`;
-    player.innerHTML = app;
   }
   function getMode(key2) {
     switch (key2) {
@@ -511,7 +510,8 @@
   }
   console.log("db_anime_info", db_anime_info);
   console.log("src_url", src_url);
-  let art = NewPlayer(src_url);
+  re_render("artplayer-app");
+  let art = NewPlayer(src_url, ".artplayer-app");
   add_danmu(art);
   let $count = document.querySelector("#count");
   let $animeName = document.querySelector("#animeName");

@@ -1,7 +1,7 @@
-import {get_anime_info} from './parser/get_anime_info'
+import {get_anime_info, re_render} from './parser/get_anime_info'
 import {get_comment, get_episodeId, get_search_episodes} from './danmu/api'
 import get_yhdmjx_url from './parser/get_yhdmjx_url.js'
-import {add_danmu, update_danmu} from './danmu/danmu'
+import {add_danmu, update_danmu} from './player/danmu.js'
 import {NewPlayer, bilibiliDanmuParseFromJson} from './player/player'
 import {local} from './utils/storage'
 import {db_info, db_url} from "./utils/db.js";
@@ -58,7 +58,8 @@ console.log('db_anime_info', db_anime_info)
 console.log('src_url', src_url)
 
 // let src_url = `http://v16m-default.akamaized.net/c79b338a02bcdfb62404a09a37974c78/66534a94/video/tos/alisg/tos-alisg-ve-0051c001-sg/oU42Rof2MAD5TKRPC2LIA2G5GHAbP8hIQPeeg6/?a=2011&bti=MzhALjBg&ch=0&cr=0&dr=0&net=5&cd=0%7C0%7C0%7C0&br=3316&bt=1658&cs=0&ds=4&ft=XE5bCqT0mmjPD12xNBo73wU7C1JcMeF~O5&mime_type=video_mp4&qs=0&rc=Zzw8NTw4ODU8NmhoPDw8PEBpajhreXc5cnF3cjMzODYzNEBgLTUzLjRgXy4xNjBfMjZeYSNhcmRlMmQ0YTRgLS1kMC1zcw%3D%3D&vvpl=1&l=20240526081952FCF254249B5F97C1A570&btag=e000a8000`
-let art = NewPlayer(src_url)
+re_render('artplayer-app')
+let art = NewPlayer(src_url, '.artplayer-app')
 add_danmu(art)
 
 let $count = document.querySelector("#count")

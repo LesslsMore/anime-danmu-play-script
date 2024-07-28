@@ -1,15 +1,14 @@
 import artplayerPluginDanmuku from 'artplayer-plugin-danmuku';
 
-
-
-export function update_danmu(art, danmus) {
+export {update_danmu, add_danmu}
+function update_danmu(art, danmus) {
     art.plugins.artplayerPluginDanmuku.config({
         danmuku: danmus,
     });
     art.plugins.artplayerPluginDanmuku.load();
 }
 
-export function add_danmu(art) {
+function add_danmu(art) {
     let plug = artplayerPluginDanmuku({
         danmuku: [],
         speed: 5, // 弹幕持续时间，单位秒，范围在[1 ~ 10]

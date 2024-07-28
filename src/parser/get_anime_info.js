@@ -1,4 +1,4 @@
-export function get_anime_info(url) {
+function get_anime_info(url) {
     let episode = parseInt(url.split('-').pop().split('.')[0])
     let include = [
             /^https:\/\/www\.dmla.*\.com\/play\/.*$/, // 风车动漫
@@ -28,3 +28,21 @@ export function get_anime_info(url) {
         episode, title
     }
 }
+
+// 删除元素，添加容器
+function re_render(container) {
+    let player = document.querySelector(".stui-player__video.clearfix")
+    if (player == undefined) {
+        player = document.querySelector("#player-left")
+    }
+    let div = player.querySelector('div')
+    let h = div.offsetHeight
+    let w = div.offsetWidth
+
+    player.removeChild(div)
+
+    let app = `<div style="height: ${h}px; width: ${w}px;" class="${container}"></div>`
+    player.innerHTML = app
+}
+
+export {get_anime_info, re_render}

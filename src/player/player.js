@@ -1,11 +1,9 @@
 import Artplayer from 'artplayer';
 
-
 // 加载 url danmu 播放器
-function NewPlayer(src_url) {
-    re_render()
+function NewPlayer(src_url, container) {
     var art = new Artplayer({
-        container: '.artplayer-app',
+        container,
         url: src_url,
         // autoplay: true,
         // muted: true,
@@ -77,22 +75,6 @@ function NewPlayer(src_url) {
     return art
 }
 
-// 删除元素，添加容器
-function re_render() {
-    let player = document.querySelector(".stui-player__video.clearfix")
-    if (player == undefined) {
-        player = document.querySelector("#player-left")
-    }
-    let div = player.querySelector('div')
-    let h = div.offsetHeight
-    let w = div.offsetWidth
-
-    player.removeChild(div)
-
-    let app = `<div style="height: ${h}px; width: ${w}px;" class="artplayer-app"></div>`
-    player.innerHTML = app
-}
-
 function getMode(key) {
     switch (key) {
         case 1:
@@ -159,4 +141,4 @@ function bilibiliDanmuParseFromJson(jsonString) {
     })
 }
 
-export { NewPlayer, bilibiliDanmuParseFromJson };
+export { NewPlayer, bilibiliDanmuParseFromJson};

@@ -69,10 +69,12 @@ const db_info_put = db_info.put.bind(db_info);
 const db_info_get = db_info.get.bind(db_info);
 
 // 封装 put 方法
-db_info.put = async function(key, value) {
+db_info.put = async function(key, value, expiryInMinutes = 60 * 24 * 7) {
+    const now = new Date();
     const item = {
         anime_id: key,
         value: value,
+        expiry: now.getTime() + expiryInMinutes * 60000
     };
 
     const result = await db_info_put(item);
@@ -95,6 +97,11 @@ db_info.get = async function(key) {
     document.dispatchEvent(event);
 
     if (!item) {
+        return null;
+    }
+    const now = new Date();
+    if (now.getTime() > item.expiry) {
+        await db_info.delete(key);
         return null;
     }
     return item.value;

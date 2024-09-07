@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         动漫弹幕播放
 // @namespace    https://github.com/LesslsMore/anime-danmu-play
-// @version      0.3.6
+// @version      0.3.7
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
 // @license      MIT
@@ -450,10 +450,12 @@
   };
   const db_info_put = db_info.put.bind(db_info);
   const db_info_get = db_info.get.bind(db_info);
-  db_info.put = async function(key2, value) {
+  db_info.put = async function(key2, value, expiryInMinutes = 60 * 24 * 7) {
+    const now = /* @__PURE__ */ new Date();
     const item = {
       anime_id: key2,
-      value
+      value,
+      expiry: now.getTime() + expiryInMinutes * 6e4
     };
     const result = await db_info_put(item);
     const event = new Event("db_info_put");
@@ -469,6 +471,11 @@
     event.value = item ? item.value : null;
     document.dispatchEvent(event);
     if (!item) {
+      return null;
+    }
+    const now = /* @__PURE__ */ new Date();
+    if (now.getTime() > item.expiry) {
+      await db_info.delete(key2);
       return null;
     }
     return item.value;

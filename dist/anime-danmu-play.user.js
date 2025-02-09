@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         动漫弹幕播放
 // @namespace    https://github.com/LesslsMore/anime-danmu-play
-// @version      0.3.7
+// @version      0.3.8
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
 // @license      MIT
+// @icon         https://cdn.yinghuazy.xyz/webjs/stui_tpl/statics/img/favicon.ico
 // @include      /^https:\/\/www\.dmla.*\.com\/play\/.*$/
 // @include      https://www.tt776b.com/play/*
 // @include      https://www.dm539.com/play/*
@@ -128,7 +129,7 @@
       });
     });
   }
-  let end_point = "https://api.dandanplay.net";
+  let end_point = "https://lesslsmore-api.vercel.app/proxy";
   let API_comment = "/api/v2/comment/";
   let API_search_episodes = `/api/v2/search/episodes`;
   function get_episodeId(animeId, id) {

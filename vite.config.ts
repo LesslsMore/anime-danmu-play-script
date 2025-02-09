@@ -13,10 +13,11 @@ export default defineConfig({
       userscript: {
         name: '动漫弹幕播放',
         namespace: 'https://github.com/LesslsMore/anime-danmu-play',
-        version: '0.3.7',
+        version: '0.3.8',
         author: 'lesslsmore',
         license: 'MIT',
         description: '自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫',
+        icon: 'https://cdn.yinghuazy.xyz/webjs/stui_tpl/statics/img/favicon.ico',
         include: [
           // 'https://www.dmla*.com/play/*', // 风车动漫
           /^https:\/\/www\.dmla.*\.com\/play\/.*$/,

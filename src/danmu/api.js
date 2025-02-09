@@ -1,7 +1,7 @@
 import xhr_get from "../utils/xhr_get";
 import { request } from '../utils/request'
 
-let end_point = 'https://api.dandanplay.net'
+let end_point = 'https://lesslsmore-api.vercel.app/proxy'
 let Comment_GetAsync = '/api/v2/comment/'
 
 let API_comment = '/api/v2/comment/'
@@ -10,9 +10,6 @@ let API_search_episodes = `/api/v2/search/episodes`
 let Search_SearchAnimeAsync = `/api/v2/search/anime?keyword=`
 let Related_GetRealtedAsync = `/api/v2/related/`
 let Comment_GetExtCommentAsync = `/api/v2/extcomment?url=`
-
-
-
 
 export async function get_danmus(title, id) {
 

@@ -19,6 +19,7 @@
     "artplayer-plugin-danmuku": "^5.0.1",
     "crypto-js": "^4.2.0",
     "dexie": "^4.0.8",
+    "file-saver": "^2.0.5",
     "unplugin-auto-import": "^0.17.6"
   }
 }

@@ -1,4 +1,7 @@
 import Artplayer from 'artplayer';
+import saveAs from 'file-saver'
+import { db_danmu } from '../utils/db';
+import {get_anime_info} from '../parser/get_anime_info'
 
 // 加载 url danmu 播放器
 function NewPlayer(src_url, container) {
@@ -18,27 +21,63 @@ function NewPlayer(src_url, container) {
         controls: [
             {
                 position: 'right',
-                html: '上传弹幕',
+                html: '上传',
                 click: function () {
                     const input = document.createElement("input");
                     input.type = "file";
-                    input.accept = "text/xml";
+                    // input.accept = "text/xml";
+                    input.accept = ".json, .xml"; // 支持上传 JSON 和 XML 文件
                     input.addEventListener("change", () => {
+                        const file = input.files[0];
+                        if (!file) return;
+
                         const reader = new FileReader();
                         reader.onload = () => {
-                            // console.log(reader)
-                            const xml = reader.result;
-                            // console.log(xml)
-                            let dm = bilibiliDanmuParseFromXml(xml)
-                            console.log(dm)
-                            art.plugins.artplayerPluginDanmuku.config({
-                                danmuku: dm,
-                            });
-                            art.plugins.artplayerPluginDanmuku.load();
+                            const content = reader.result;
+
+                            // 根据文件后缀名区分处理逻辑
+                            if (file.name.endsWith(".json")) {
+                                // 解析 JSON 格式弹幕
+                                let json = JSON.parse(content)
+                                let comments
+                                if (json.length === 1) {
+                                    comments = json[0].comments;
+                                } else {
+                                    comments = json
+                                }
+                                const dm = bilibiliDanmuParseFromJson(comments);
+                                console.log("Parsed JSON danmaku:", dm);
+                                art.plugins.artplayerPluginDanmuku.config({
+                                    danmuku: dm,
+                                });
+                                art.plugins.artplayerPluginDanmuku.load();
+                            } else if (file.name.endsWith(".xml")) {
+                                // 解析 XML 格式弹幕
+                                const dm = bilibiliDanmuParseFromXml(content);
+                                console.log("Parsed XML danmaku:", dm);
+                                art.plugins.artplayerPluginDanmuku.config({
+                                    danmuku: dm,
+                                });
+                                art.plugins.artplayerPluginDanmuku.load();
+                            } else {
+                                console.error("Unsupported file format. Please upload a .json or .xml file.");
+                            }
                         };
-                        reader.readAsText(input.files[0]);
+                        reader.readAsText(file);
                     });
                     input.click();
+                },
+            },
+            {
+                position: 'right',
+                html: '下载',
+                click: async function () {
+                    let $episodes = document.querySelector("#episodes")
+                    const episodeId = $episodes.value
+                    let {anime_id, episode, title, url} = get_anime_info()
+                    let danmu = await db_danmu.get(anime_id, episodeId)
+                    const blob = new Blob([JSON.stringify(danmu)], {type: "text/plain;charset=utf-8"});
+                    saveAs(blob, `${title} - ${episode}.json`);
                 },
             },
         ],

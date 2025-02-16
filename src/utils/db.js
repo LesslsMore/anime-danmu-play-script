@@ -5,6 +5,7 @@ const db_name = 'anime'
 const db_schema = {
     info: '&anime_id', // 主键 索引
     url: '&anime_id', // 主键 索引
+    danmu: '[anime_id+episode_id]' // 组合键 索引
 }
 
 const db_obj = {
@@ -13,6 +14,7 @@ const db_obj = {
 
 const db_url = db_obj[db_name].url
 const db_info = db_obj[db_name].info
+const db_danmu = db_obj[db_name].danmu
 
 function get_db(db_name, db_schema, db_ver = 1) {
     let db = new Dexie(db_name)
@@ -122,5 +124,48 @@ db_info.get = async function(key) {
 //     console.log(value);
 // })();
 
-export {db_url, db_info}
+// 原始的 Dexie put 和 get 方法
+const db_danmu_put = db_danmu.put.bind(db_danmu);
+const db_danmu_get = db_danmu.get.bind(db_danmu);
 
+// 封装 put 方法
+db_danmu.put = async function(anime_id, episode_id, value, expiryInMinutes = 60 * 24 * 7) {
+    const now = new Date();
+    const item = {
+        anime_id: anime_id,
+        episode_id: episode_id,
+        value: value,
+        expiry: now.getTime() + expiryInMinutes * 60000
+    };
+
+    const result = await db_danmu_put(item);
+
+    const event = new Event('db_danmu_put');
+    event.key = key;
+    event.value = value;
+    document.dispatchEvent(event);
+
+    return result;
+};
+
+// 封装 get 方法
+db_danmu.get = async function(anime_id, episode_id) {
+    const key = {anime_id: anime_id, episode_id: episode_id};
+    const item = await db_danmu_get(key);
+    const event = new Event('db_danmu_get');
+    event.key = key;
+    event.value = item ? item.value : null;
+    document.dispatchEvent(event);
+
+    if (!item) {
+        return null;
+    }
+    const now = new Date();
+    if (now.getTime() > item.expiry) {
+        await db_danmu.delete(key);
+        return null;
+    }
+    return item.value;
+};
+
+export {db_url, db_info, db_danmu}

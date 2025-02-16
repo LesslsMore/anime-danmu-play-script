@@ -1,4 +1,5 @@
-function get_anime_info(url) {
+function get_anime_info() {
+    let url = window.location.href
     let episode = parseInt(url.split('-').pop().split('.')[0])
     let include = [
             /^https:\/\/www\.dmla.*\.com\/play\/.*$/, // 风车动漫
@@ -24,8 +25,15 @@ function get_anime_info(url) {
         title = ''
         console.log('没有自动匹配到动漫名称')
     }
+    let anime_url = url.split('-')[0]
+    let anime_id = parseInt(anime_url.split('/')[4])
+
+    console.log({
+        anime_id, episode, title, url
+    })
+
     return {
-        episode, title
+        anime_id, episode, title, url
     }
 }
 

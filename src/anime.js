@@ -4,18 +4,11 @@ import get_yhdmjx_url from './parser/get_yhdmjx_url.js'
 import {add_danmu, update_danmu} from './player/danmu.js'
 import {NewPlayer, bilibiliDanmuParseFromJson} from './player/player'
 import {local} from './utils/storage'
-import {db_info, db_url} from "./utils/db.js";
+import {db_info, db_url, db_danmu} from "./utils/db.js";
 
 // export async function anime() {
-let url = window.location.href
 
-let {episode, title} = get_anime_info(url)
-
-let anime_url = url.split('-')[0]
-let anime_id = parseInt(anime_url.split('/')[4])
-console.log(url)
-console.log(episode)
-console.log(title)
+let {anime_id, episode, title, url} = get_anime_info()
 
 let db_anime_url = {
     "episodes": {},
@@ -103,7 +96,21 @@ async function update_episode_danmu() {
     // 在控制台打印选中的值
     console.log('episodeId: ', episodeId);
 
-    let danmu = await get_comment(episodeId)
+    let danmu
+    try {
+        // 优先使用接口数据
+        danmu = await get_comment(episodeId)
+        
+        // 缓存新数据，有效期7天
+        await db_danmu.put(anime_id, episodeId, danmu)
+    } catch (error) {
+        console.log('接口请求失败，尝试使用缓存数据')
+        // 使用缓存数据
+        danmu = await db_danmu.get(anime_id, episodeId)
+        if (!danmu) {
+            throw new Error('无法获取弹幕数据')
+        }
+    }
 
     let danmus = bilibiliDanmuParseFromJson(danmu)
     update_danmu(art, danmus)
@@ -240,5 +247,3 @@ async function updateEpisodes(anime) {
     const event = new Event('updateEpisodes');
     document.dispatchEvent(event);
 }
-
-

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         动漫弹幕播放
 // @namespace    https://github.com/LesslsMore/anime-danmu-play
-// @version      0.3.8
+// @version      0.3.9
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
 // @license      MIT
@@ -13,6 +13,7 @@
 // @require      https://cdn.jsdelivr.net/npm/artplayer@5.1.1/dist/artplayer.js
 // @require      https://cdn.jsdelivr.net/npm/artplayer-plugin-danmuku@5.0.1/dist/artplayer-plugin-danmuku.js
 // @require      https://cdn.jsdelivr.net/npm/dexie@4.0.8/dist/dexie.min.js
+// @require      https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js
 // @connect      https://api.dandanplay.net/*
 // @connect      https://danmu.yhdmjx.com/*
 // @connect      http://v16m-default.akamaized.net/*
@@ -24,7 +25,7 @@
 // @run-at       document-end
 // ==/UserScript==
 
-(async function (CryptoJS, artplayerPluginDanmuku, Artplayer, Dexie) {
+(async function (CryptoJS, artplayerPluginDanmuku, Artplayer, saveAs, Dexie) {
   'use strict';
 
   (function() {
@@ -44,7 +45,8 @@
       originalRemoveItem.apply(this, arguments);
     };
   })();
-  function get_anime_info(url2) {
+  function get_anime_info() {
+    let url2 = window.location.href;
     let episode2 = parseInt(url2.split("-").pop().split(".")[0]);
     let include = [
       /^https:\/\/www\.dmla.*\.com\/play\/.*$/,
@@ -72,9 +74,19 @@
       title2 = "";
       console.log("没有自动匹配到动漫名称");
     }
-    return {
+    let anime_url = url2.split("-")[0];
+    let anime_id2 = parseInt(anime_url.split("/")[4]);
+    console.log({
+      anime_id: anime_id2,
       episode: episode2,
-      title: title2
+      title: title2,
+      url: url2
+    });
+    return {
+      anime_id: anime_id2,
+      episode: episode2,
+      title: title2,
+      url: url2
     };
   }
   function re_render(container) {
@@ -150,7 +162,7 @@
     });
     return res.comments;
   }
-  const key = CryptoJS.enc.Utf8.parse("57A891D97E332A9D");
+  const key$1 = CryptoJS.enc.Utf8.parse("57A891D97E332A9D");
   const iv = CryptoJS.enc.Utf8.parse("844182a9dfe9c5ca");
   async function get_yhdmjx_url(url2) {
     let body = await xhr_get(url2);
@@ -188,7 +200,7 @@
     }
   }
   function Decrypt(srcs) {
-    let decrypt = CryptoJS.AES.decrypt(srcs, key, { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+    let decrypt = CryptoJS.AES.decrypt(srcs, key$1, { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
     let decryptedStr = decrypt.toString(CryptoJS.enc.Utf8);
     return decryptedStr.toString();
   }
@@ -248,6 +260,124 @@
     art2.on("artplayerPluginDanmuku:config", (option) => {
     });
   }
+  const db_name = "anime";
+  const db_schema = {
+    info: "&anime_id",
+    // 主键 索引
+    url: "&anime_id",
+    // 主键 索引
+    danmu: "[anime_id+episode_id]"
+    // 组合键 索引
+  };
+  const db_obj = {
+    [db_name]: get_db(db_name, db_schema)
+  };
+  const db_url = db_obj[db_name].url;
+  const db_info = db_obj[db_name].info;
+  const db_danmu = db_obj[db_name].danmu;
+  function get_db(db_name2, db_schema2, db_ver = 1) {
+    let db = new Dexie(db_name2);
+    db.version(db_ver).stores(db_schema2);
+    return db;
+  }
+  const db_url_put = db_url.put.bind(db_url);
+  const db_url_get = db_url.get.bind(db_url);
+  db_url.put = async function(key2, value, expiryInMinutes = 60) {
+    const now = /* @__PURE__ */ new Date();
+    const item = {
+      anime_id: key2,
+      value,
+      expiry: now.getTime() + expiryInMinutes * 6e4
+    };
+    const result = await db_url_put(item);
+    const event = new Event("db_yhdm_put");
+    event.key = key2;
+    event.value = value;
+    document.dispatchEvent(event);
+    return result;
+  };
+  db_url.get = async function(key2) {
+    const item = await db_url_get(key2);
+    const event = new Event("db_yhdm_get");
+    event.key = key2;
+    event.value = item ? item.value : null;
+    document.dispatchEvent(event);
+    if (!item) {
+      return null;
+    }
+    const now = /* @__PURE__ */ new Date();
+    if (now.getTime() > item.expiry) {
+      await db_url.delete(key2);
+      return null;
+    }
+    return item.value;
+  };
+  const db_info_put = db_info.put.bind(db_info);
+  const db_info_get = db_info.get.bind(db_info);
+  db_info.put = async function(key2, value, expiryInMinutes = 60 * 24 * 7) {
+    const now = /* @__PURE__ */ new Date();
+    const item = {
+      anime_id: key2,
+      value,
+      expiry: now.getTime() + expiryInMinutes * 6e4
+    };
+    const result = await db_info_put(item);
+    const event = new Event("db_info_put");
+    event.key = key2;
+    event.value = value;
+    document.dispatchEvent(event);
+    return result;
+  };
+  db_info.get = async function(key2) {
+    const item = await db_info_get(key2);
+    const event = new Event("db_info_get");
+    event.key = key2;
+    event.value = item ? item.value : null;
+    document.dispatchEvent(event);
+    if (!item) {
+      return null;
+    }
+    const now = /* @__PURE__ */ new Date();
+    if (now.getTime() > item.expiry) {
+      await db_info.delete(key2);
+      return null;
+    }
+    return item.value;
+  };
+  const db_danmu_put = db_danmu.put.bind(db_danmu);
+  const db_danmu_get = db_danmu.get.bind(db_danmu);
+  db_danmu.put = async function(anime_id2, episode_id, value, expiryInMinutes = 60 * 24 * 7) {
+    const now = /* @__PURE__ */ new Date();
+    const item = {
+      anime_id: anime_id2,
+      episode_id,
+      value,
+      expiry: now.getTime() + expiryInMinutes * 6e4
+    };
+    const result = await db_danmu_put(item);
+    const event = new Event("db_danmu_put");
+    event.key = key;
+    event.value = value;
+    document.dispatchEvent(event);
+    return result;
+  };
+  db_danmu.get = async function(anime_id2, episode_id) {
+    const key2 = { anime_id: anime_id2, episode_id };
+    const item = await db_danmu_get(key2);
+    const event = new Event("db_danmu_get");
+    event.key = key2;
+    event.value = item ? item.value : null;
+    document.dispatchEvent(event);
+    if (!item) {
+      return null;
+    }
+    const now = /* @__PURE__ */ new Date();
+    if (now.getTime() > item.expiry) {
+      await db_danmu.delete(key2);
+      return null;
+    }
+    return item.value;
+  };
   function NewPlayer(src_url2, container) {
     var art2 = new Artplayer({
       container,
@@ -265,25 +395,58 @@
       controls: [
         {
           position: "right",
-          html: "上传弹幕",
+          html: "上传",
           click: function() {
             const input = document.createElement("input");
             input.type = "file";
-            input.accept = "text/xml";
+            input.accept = ".json, .xml";
             input.addEventListener("change", () => {
+              const file = input.files[0];
+              if (!file)
+                return;
               const reader = new FileReader();
               reader.onload = () => {
-                const xml = reader.result;
-                let dm = bilibiliDanmuParseFromXml(xml);
-                console.log(dm);
-                art2.plugins.artplayerPluginDanmuku.config({
-                  danmuku: dm
-                });
-                art2.plugins.artplayerPluginDanmuku.load();
+                const content = reader.result;
+                if (file.name.endsWith(".json")) {
+                  let json = JSON.parse(content);
+                  let comments;
+                  if (json.length === 1) {
+                    comments = json[0].comments;
+                  } else {
+                    comments = json;
+                  }
+                  const dm = bilibiliDanmuParseFromJson(comments);
+                  console.log("Parsed JSON danmaku:", dm);
+                  art2.plugins.artplayerPluginDanmuku.config({
+                    danmuku: dm
+                  });
+                  art2.plugins.artplayerPluginDanmuku.load();
+                } else if (file.name.endsWith(".xml")) {
+                  const dm = bilibiliDanmuParseFromXml(content);
+                  console.log("Parsed XML danmaku:", dm);
+                  art2.plugins.artplayerPluginDanmuku.config({
+                    danmuku: dm
+                  });
+                  art2.plugins.artplayerPluginDanmuku.load();
+                } else {
+                  console.error("Unsupported file format. Please upload a .json or .xml file.");
+                }
               };
-              reader.readAsText(input.files[0]);
+              reader.readAsText(file);
             });
             input.click();
+          }
+        },
+        {
+          position: "right",
+          html: "下载",
+          click: async function() {
+            let $episodes2 = document.querySelector("#episodes");
+            const episodeId = $episodes2.value;
+            let { anime_id: anime_id2, episode: episode2, title: title2, url: url2 } = get_anime_info();
+            let danmu = await db_danmu.get(anime_id2, episodeId);
+            const blob = new Blob([JSON.stringify(danmu)], { type: "text/plain;charset=utf-8" });
+            saveAs(blob, `${title2} - ${episode2}.json`);
           }
         }
       ],
@@ -400,94 +563,7 @@
   } catch (error) {
     gm = local;
   }
-  const db_name = "anime";
-  const db_schema = {
-    info: "&anime_id",
-    // 主键 索引
-    url: "&anime_id"
-    // 主键 索引
-  };
-  const db_obj = {
-    [db_name]: get_db(db_name, db_schema)
-  };
-  const db_url = db_obj[db_name].url;
-  const db_info = db_obj[db_name].info;
-  function get_db(db_name2, db_schema2, db_ver = 1) {
-    let db = new Dexie(db_name2);
-    db.version(db_ver).stores(db_schema2);
-    return db;
-  }
-  const db_url_put = db_url.put.bind(db_url);
-  const db_url_get = db_url.get.bind(db_url);
-  db_url.put = async function(key2, value, expiryInMinutes = 60) {
-    const now = /* @__PURE__ */ new Date();
-    const item = {
-      anime_id: key2,
-      value,
-      expiry: now.getTime() + expiryInMinutes * 6e4
-    };
-    const result = await db_url_put(item);
-    const event = new Event("db_yhdm_put");
-    event.key = key2;
-    event.value = value;
-    document.dispatchEvent(event);
-    return result;
-  };
-  db_url.get = async function(key2) {
-    const item = await db_url_get(key2);
-    const event = new Event("db_yhdm_get");
-    event.key = key2;
-    event.value = item ? item.value : null;
-    document.dispatchEvent(event);
-    if (!item) {
-      return null;
-    }
-    const now = /* @__PURE__ */ new Date();
-    if (now.getTime() > item.expiry) {
-      await db_url.delete(key2);
-      return null;
-    }
-    return item.value;
-  };
-  const db_info_put = db_info.put.bind(db_info);
-  const db_info_get = db_info.get.bind(db_info);
-  db_info.put = async function(key2, value, expiryInMinutes = 60 * 24 * 7) {
-    const now = /* @__PURE__ */ new Date();
-    const item = {
-      anime_id: key2,
-      value,
-      expiry: now.getTime() + expiryInMinutes * 6e4
-    };
-    const result = await db_info_put(item);
-    const event = new Event("db_info_put");
-    event.key = key2;
-    event.value = value;
-    document.dispatchEvent(event);
-    return result;
-  };
-  db_info.get = async function(key2) {
-    const item = await db_info_get(key2);
-    const event = new Event("db_info_get");
-    event.key = key2;
-    event.value = item ? item.value : null;
-    document.dispatchEvent(event);
-    if (!item) {
-      return null;
-    }
-    const now = /* @__PURE__ */ new Date();
-    if (now.getTime() > item.expiry) {
-      await db_info.delete(key2);
-      return null;
-    }
-    return item.value;
-  };
-  let url = window.location.href;
-  let { episode, title } = get_anime_info(url);
-  let anime_url = url.split("-")[0];
-  let anime_id = parseInt(anime_url.split("/")[4]);
-  console.log(url);
-  console.log(episode);
-  console.log(title);
+  let { anime_id, episode, title, url } = get_anime_info();
   let db_anime_url = {
     "episodes": {}
   };
@@ -550,7 +626,17 @@
     }
     const episodeId = $episodes.value;
     console.log("episodeId: ", episodeId);
-    let danmu = await get_comment(episodeId);
+    let danmu;
+    try {
+      danmu = await get_comment(episodeId);
+      await db_danmu.put(anime_id, episodeId, danmu);
+    } catch (error) {
+      console.log("接口请求失败，尝试使用缓存数据");
+      danmu = await db_danmu.get(anime_id, episodeId);
+      if (!danmu) {
+        throw new Error("无法获取弹幕数据");
+      }
+    }
     let danmus = bilibiliDanmuParseFromJson(danmu);
     update_danmu(art, danmus);
   }
@@ -652,4 +738,4 @@
     document.dispatchEvent(event);
   }
 
-})(CryptoJS, artplayerPluginDanmuku, Artplayer, Dexie);
+})(CryptoJS, artplayerPluginDanmuku, Artplayer, saveAs, Dexie);

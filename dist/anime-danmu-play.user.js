@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         动漫弹幕播放
 // @namespace    https://github.com/LesslsMore/anime-danmu-play
-// @version      0.3.9
+// @version      0.3.10
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
 // @license      MIT
@@ -163,17 +163,26 @@
     return res.comments;
   }
   const key$1 = CryptoJS.enc.Utf8.parse("57A891D97E332A9D");
-  const iv = CryptoJS.enc.Utf8.parse("844182a9dfe9c5ca");
+  const iv = CryptoJS.enc.Utf8.parse("8d312e8d3cde6cbb");
+  function Decrypt(srcs, key2, iv2) {
+    let decrypt = CryptoJS.AES.decrypt(srcs, key2, { iv: iv2, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
+    let decryptedStr = decrypt.toString(CryptoJS.enc.Utf8);
+    return decryptedStr.toString();
+  }
   async function get_yhdmjx_url(url2) {
     let body = await xhr_get(url2);
     let m3u8 = get_m3u8_url(body);
+    console.log(`m3u8: ${m3u8}`);
     if (m3u8) {
       let body2 = await xhr_get(m3u8);
       let aes_data = get_encode_url(body2);
       if (aes_data) {
-        let url3 = Decrypt(aes_data);
-        let src = url3.split(".net/")[1];
-        let src_url2 = `http://v16m-default.akamaized.net/${src}`;
+        console.log(`aes: ${aes_data}`);
+        let url3 = Decrypt(aes_data, key$1, iv);
+        console.log(`url: ${url3}`);
+        let src = url3.split(".app/")[1];
+        let src_url2 = `https://v16.resso.app/${src}`;
+        console.log(`url: ${src_url2}`);
         return src_url2;
       }
     }
@@ -184,7 +193,6 @@
     if (matches) {
       let play = JSON.parse(`{${matches[0]}}`);
       let m3u8 = `https://danmu.yhdmjx.com/m3u8.php?url=${play.url}`;
-      console.log("m3u8", m3u8);
       return m3u8;
     } else {
       console.log("No matches found.");
@@ -198,11 +206,6 @@
     } else {
       console.log("No matches found.");
     }
-  }
-  function Decrypt(srcs) {
-    let decrypt = CryptoJS.AES.decrypt(srcs, key$1, { iv, mode: CryptoJS.mode.CBC, padding: CryptoJS.pad.Pkcs7 });
-    let decryptedStr = decrypt.toString(CryptoJS.enc.Utf8);
-    return decryptedStr.toString();
   }
   function update_danmu(art2, danmus) {
     art2.plugins.artplayerPluginDanmuku.config({

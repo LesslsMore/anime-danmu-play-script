@@ -1,6 +1,6 @@
 import {get_anime_info, re_render} from './parser/get_anime_info'
 import {get_comment, get_episodeId, get_search_episodes} from './danmu/api'
-import get_yhdmjx_url from './parser/get_yhdmjx_url.js'
+import {get_yhdmjx_url} from './parser/get_yhdmjx_url.js'
 import {add_danmu, update_danmu} from './player/danmu.js'
 import {NewPlayer, bilibiliDanmuParseFromJson} from './player/player'
 import {local} from './utils/storage'
@@ -100,7 +100,7 @@ async function update_episode_danmu() {
     try {
         // 优先使用接口数据
         danmu = await get_comment(episodeId)
-        
+
         // 缓存新数据，有效期7天
         await db_danmu.put(anime_id, episodeId, danmu)
     } catch (error) {

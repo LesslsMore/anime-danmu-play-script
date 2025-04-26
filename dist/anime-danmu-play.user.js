@@ -7,6 +7,7 @@
 // @license      MIT
 // @icon         https://cdn.yinghuazy.xyz/webjs/stui_tpl/statics/img/favicon.ico
 // @include      /^https:\/\/www\.dmla.*\.com\/play\/.*$/
+// @include      https://danmu.yhdmjx.com/*
 // @include      https://www.tt776b.com/play/*
 // @include      https://www.dm539.com/play/*
 // @require      https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.js
@@ -28,6 +29,9 @@
 (async function (CryptoJS, artplayerPluginDanmuku, Artplayer, saveAs, Dexie) {
   'use strict';
 
+  var _GM_getValue = /* @__PURE__ */ (() => typeof GM_getValue != "undefined" ? GM_getValue : void 0)();
+  var _GM_setValue = /* @__PURE__ */ (() => typeof GM_setValue != "undefined" ? GM_setValue : void 0)();
+  var _GM_xmlhttpRequest = /* @__PURE__ */ (() => typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : void 0)();
   (function() {
     var originalSetItem = localStorage.setItem;
     var originalRemoveItem = localStorage.removeItem;
@@ -101,9 +105,6 @@
     let app = `<div style="height: ${h}px; width: ${w}px;" class="${container}"></div>`;
     player.innerHTML = app;
   }
-  var _GM_getValue = /* @__PURE__ */ (() => typeof GM_getValue != "undefined" ? GM_getValue : void 0)();
-  var _GM_setValue = /* @__PURE__ */ (() => typeof GM_setValue != "undefined" ? GM_setValue : void 0)();
-  var _GM_xmlhttpRequest = /* @__PURE__ */ (() => typeof GM_xmlhttpRequest != "undefined" ? GM_xmlhttpRequest : void 0)();
   function xhr_get(url2) {
     return new Promise((resolve, reject) => {
       _GM_xmlhttpRequest({
@@ -180,8 +181,8 @@
         console.log(`aes: ${aes_data}`);
         let url3 = Decrypt(aes_data, key$1, iv);
         console.log(`url: ${url3}`);
-        let src = url3.split(".app/")[1];
-        let src_url2 = `https://v16.resso.app/${src}`;
+        let src = url3.split(".com/")[1];
+        let src_url2 = `https://v16.muscdn.com/${src}`;
         console.log(`url: ${src_url2}`);
         return src_url2;
       }

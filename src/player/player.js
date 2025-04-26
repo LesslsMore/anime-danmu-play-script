@@ -1,7 +1,7 @@
 import Artplayer from 'artplayer';
 import saveAs from 'file-saver'
-import { db_danmu } from '../utils/db';
-import {get_anime_info} from '../parser/get_anime_info'
+import { db_danmu } from '@/utils/db';
+import {get_anime_info} from '@/parser/get_anime_info'
 
 // 加载 url danmu 播放器
 function NewPlayer(src_url, container) {

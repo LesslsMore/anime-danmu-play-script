@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import monkey, { cdn, util } from 'vite-plugin-monkey';
 import AutoImport from 'unplugin-auto-import/vite';
+import { fileURLToPath, URL } from 'node:url'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -21,10 +22,12 @@ export default defineConfig({
         include: [
           // 'https://www.dmla*.com/play/*', // 风车动漫
           /^https:\/\/www\.dmla.*\.com\/play\/.*$/,
+          'https://danmu.yhdmjx.com/*',
           'https://www.tt776b.com/play/*', // 风车动漫
           'https://www.dm539.com/play/*', // 樱花动漫
           // 'https://www.agedm.org/play/*',
           // 'https://43.240.156.118:8443/vip/?url=age_*',
+
         ],
         connect: [
           'https://api.dandanplay.net/*',
@@ -46,4 +49,9 @@ export default defineConfig({
       },
     }),
   ],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+    }
+  },
 });

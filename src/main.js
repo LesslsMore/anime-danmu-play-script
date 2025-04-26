@@ -1,8 +1,12 @@
 
-import { get_agedm_info, get_agedm_src } from './parser/get_agedm_info'
+import { get_agedm_info, get_agedm_src } from '@/parser/get_agedm_info'
 
-import './utils/local.js'
-import './anime.js'
+import { interceptor } from '@/interceptor';
+
+// interceptor();
+
+import '@/utils/local.js'
+import '@/anime.js'
 
 // if (document.readyState !== 'loading') {
 //     agedm()

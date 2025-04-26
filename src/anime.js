@@ -1,10 +1,10 @@
-import {get_anime_info, re_render} from './parser/get_anime_info'
-import {get_comment, get_episodeId, get_search_episodes} from './danmu/api'
-import {get_yhdmjx_url} from './parser/get_yhdmjx_url.js'
-import {add_danmu, update_danmu} from './player/danmu.js'
-import {NewPlayer, bilibiliDanmuParseFromJson} from './player/player'
-import {local} from './utils/storage'
-import {db_info, db_url, db_danmu} from "./utils/db.js";
+import {get_anime_info, re_render} from '@/parser/get_anime_info'
+import {get_comment, get_episodeId, get_search_episodes} from '@/danmu/api'
+import {get_yhdmjx_url} from '@/parser/get_yhdmjx_url.js'
+import {add_danmu, update_danmu} from '@/player/danmu.js'
+import {NewPlayer, bilibiliDanmuParseFromJson} from '@/player/player'
+import {local} from '@/utils/storage'
+import {db_info, db_url, db_danmu} from "@/utils/db.js";
 
 // export async function anime() {
 

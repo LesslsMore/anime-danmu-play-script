@@ -1,5 +1,5 @@
-import xhr_get from "../utils/xhr_get";
-import {Decrypt, iv, key} from "./decode.js";
+import xhr_get from "@/utils/xhr_get";
+import {Decrypt, iv, key} from "@/parser/decode.js";
 
 
 
@@ -17,8 +17,10 @@ async function get_yhdmjx_url(url){
              console.log(`aes: ${aes_data}`)
              let url = Decrypt(aes_data, key, iv)
              console.log(`url: ${url}`)
-             let src = url.split('.app/')[1]
-             let src_url = `https://v16.resso.app/${src}`
+            //  let src = url.split('.app/')[1]
+            //  let src_url = `https://v16.resso.app/${src}`
+            let src = url.split('.com/')[1]
+             let src_url = `https://v16.muscdn.com/${src}`
              console.log(`url: ${src_url}`)
              return src_url
          }

@@ -1,5 +1,5 @@
-import xhr_get from "../utils/xhr_get";
-import { request } from '../utils/request'
+import xhr_get from "@/utils/xhr_get";
+import { request } from '@/utils/request'
 
 let end_point = 'https://lesslsmore-api.vercel.app/proxy'
 let Comment_GetAsync = '/api/v2/comment/'

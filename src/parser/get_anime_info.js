@@ -28,13 +28,12 @@ function get_anime_info() {
     let anime_url = url.split('-')[0]
     let anime_id = parseInt(anime_url.split('/')[4])
 
-    console.log({
-        anime_id, episode, title, url
-    })
-
-    return {
+    let web_video_info ={
         anime_id, episode, title, url
     }
+    console.log(web_video_info)
+
+    return web_video_info
 }
 
 // 删除元素，添加容器

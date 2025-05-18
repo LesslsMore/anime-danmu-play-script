@@ -14,7 +14,7 @@ export default defineConfig({
       userscript: {
         name: '动漫弹幕播放',
         namespace: 'https://github.com/LesslsMore/anime-danmu-play',
-        version: '0.3.11',
+        version: '0.4.0',
         author: 'lesslsmore',
         license: 'MIT',
         description: '自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫',
@@ -40,6 +40,7 @@ export default defineConfig({
       },
       build: {
         externalGlobals: {
+          axios: cdn.jsdelivr('axios', 'dist/axios.min.js'),
           'crypto-js': cdn.jsdelivr('CryptoJS', 'crypto-js.js'),
           'artplayer': cdn.jsdelivr('Artplayer', 'dist/artplayer.js'),
           'artplayer-plugin-danmuku': cdn.jsdelivr('artplayerPluginDanmuku', 'dist/artplayer-plugin-danmuku.js'),

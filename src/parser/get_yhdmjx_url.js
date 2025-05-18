@@ -20,9 +20,9 @@ async function get_yhdmjx_url(url){
             //  let src = url.split('.app/')[1]
             //  let src_url = `https://v16.resso.app/${src}`
             let src = url.split('.com/')[1]
-             let src_url = `https://v16.muscdn.com/${src}`
-             console.log(`url: ${src_url}`)
-             return src_url
+             let mp4 = `https://lf16-capcut.faceueditorv.com/${src}`
+             console.log(`url: ${mp4}`)
+             return {mp4, m3u8}
          }
      }
  }

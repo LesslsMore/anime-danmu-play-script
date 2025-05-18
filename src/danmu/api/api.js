@@ -1,7 +1,6 @@
-import xhr_get from "@/utils/xhr_get";
-import { request } from '@/utils/request'
+import { request } from '@/danmu/api/request'
 
-let end_point = 'https://lesslsmore-api.vercel.app/proxy'
+let end_point = '/proxy'
 let Comment_GetAsync = '/api/v2/comment/'
 
 let API_comment = '/api/v2/comment/'
@@ -11,7 +10,7 @@ let Search_SearchAnimeAsync = `/api/v2/search/anime?keyword=`
 let Related_GetRealtedAsync = `/api/v2/related/`
 let Comment_GetExtCommentAsync = `/api/v2/extcomment?url=`
 
-export async function get_danmus(title, id) {
+async function get_danmus(title, id) {
 
     // let animeId = await get_animeId(title)
 
@@ -31,7 +30,7 @@ export async function get_danmus(title, id) {
     return danmu
 }
 
-export function get_episodeId(animeId, id) {
+function get_episodeId(animeId, id) {
     id = id.toString().padStart(4, "0");
     let episodeId = `${animeId}${id}`
     return episodeId
@@ -40,9 +39,9 @@ export function get_episodeId(animeId, id) {
 // 获取 danmu 中 animeId
 async function get_animeId(title) {
     let url = `${end_point}${Search_SearchAnimeAsync}${title}`
-    let data = await xhr_get(url)
-    data = JSON.parse(data)
-    // console.log(data)
+    let data = await request.get(url)
+    // data = JSON.parse(data)
+    console.log(data)
     let { animeId, animeTitle } = data.animes[0]
     console.log(animeId)
     console.log(animeTitle)
@@ -50,19 +49,31 @@ async function get_animeId(title) {
 }
 
 // 获取 anime, episode
-export async function get_search_episodes(anime, episode) {
+async function get_search_episodes(anime, episode) {
     const res = await request({
         url: `${end_point}${API_search_episodes}`,
+        method: 'get',
         params: { anime, episode },
     })
+    // const res = await request({
+    //     url: `${end_point}${API_search_episodes}?anime=${anime}`,
+    //     method: 'get',
+    //     // params: {
+    //     //     anime,
+    //     //     episode,
+    //     // },
+    // })
+    console.log(res)
     return res.animes
 }
 
 // 获取原始 danmu
-export async function get_comment(episodeId) {
+async function get_comment(episodeId) {
     const res = await request({
         url: `${end_point}${API_comment}${episodeId}?withRelated=true&chConvert=1`,
+        method: 'get',
     })
+    // console.log(res)
     return res.comments
 }
 
@@ -72,8 +83,8 @@ async function get_danmu(episodeId) {
     let url = `${end_point}${Comment_GetAsync}${episodeId}`
     console.log('获取原始 danmu')
     console.log(url)
-    let data = await xhr_get(url)
-    data = JSON.parse(data)
+    let data = await request.get(url)
+    // data = JSON.parse(data)
     // let animeId = data.animes[0].animeId
     // console.log('获取原始 danmu 数目：')
     // console.log(data.count)
@@ -85,8 +96,8 @@ async function get_related_url(episodeId) {
     let url = `${end_point}${Related_GetRealtedAsync}${episodeId}`
     console.log('获取视频相关 url')
     console.log(url)
-    let data = await xhr_get(url)
-    data = JSON.parse(data)
+    let data = await request.get(url)
+    // data = JSON.parse(data)
     // let animeId = data.animes[0].animeId
     // console.log(data)
     return data.relateds
@@ -97,11 +108,17 @@ async function get_danmu_ext(related_url) {
     let url = `${end_point}${Comment_GetExtCommentAsync}${related_url}`
     console.log('获取扩展 danmu')
     console.log(url)
-    let data = await xhr_get(url)
-    data = JSON.parse(data)
+    let data = await request.get(url)
+    // data = JSON.parse(data)
 
     // let animeId = data.animes[0].animeId
     // console.log('获取扩展 danmu 数目：')
     // console.log(data.count)
     return data.comments
+}
+
+export {
+    get_search_episodes,
+    get_comment,
+    get_episodeId,
 }

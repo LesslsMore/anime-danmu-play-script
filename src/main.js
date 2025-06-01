@@ -6,7 +6,8 @@ import { interceptor } from '@/interceptor';
 // interceptor();
 
 import '@/utils/local.js'
-import '@/anime.js'
+// import '@/anime.js'
+import '@/play_url'
 
 // if (document.readyState !== 'loading') {
 //     agedm()

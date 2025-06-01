@@ -28,8 +28,13 @@ function get_anime_info() {
     let anime_url = url.split('-')[0]
     let anime_id = parseInt(anime_url.split('/')[4])
 
+    let src_url = ''
+    let player = document.querySelector("#lelevideo")
+    if (player) {
+        src_url = player.src
+    }
     let web_video_info ={
-        anime_id, episode, title, url
+        anime_id, episode, title, url, src_url
     }
     console.log(web_video_info)
 

@@ -1,4 +1,4 @@
-import {get_anime_info, re_render} from '@/parser/get_anime_info'
+import {get_anime_info, re_render} from '@/parser/get_anime_info.js'
 import {set_db_url_info} from "@/danmu/db/db_url.js";
 import {get_anime_list, init_danmu_player, set_anime_name} from "@/danmu/player/search.js";
 import {init_player} from "@/danmu/player/player.js";

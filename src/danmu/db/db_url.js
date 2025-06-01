@@ -4,7 +4,7 @@ import {get_yhdmjx_url} from '@/parser/get_yhdmjx_url.js'
 
 async function set_db_url_info(web_video_info) {
 
-    let {anime_id, title, url} = web_video_info
+    let {anime_id, title, url, src_url} = web_video_info
 
     let var_anime_url = {
         "episodes": {},
@@ -15,7 +15,6 @@ async function set_db_url_info(web_video_info) {
         var_anime_url = db_anime_url
     }
 
-    let src_url
     if (!var_anime_url['episodes'].hasOwnProperty(url)) {
         let { mp4, m3u8 } = await get_yhdmjx_url(url)
         src_url = mp4

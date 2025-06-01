@@ -24,3 +24,6 @@ test/*
 *.sln
 *.sw?
 
+/.env.production
+/.env.development
+/src/-1/

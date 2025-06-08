@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         动漫弹幕播放
-// @namespace    https://github.com/LesslsMore/anime-danmu-play
+// @namespace    https://github.com/LesslsMore/anime-danmu-play-script
 // @version      0.5.1
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫

@@ -13,7 +13,7 @@ export default defineConfig({
       entry: 'src/main.js',
       userscript: {
         name: '动漫弹幕播放',
-        namespace: 'https://github.com/LesslsMore/anime-danmu-play',
+        namespace: 'https://github.com/LesslsMore/anime-danmu-play-script',
         version: '0.5.1',
         author: 'lesslsmore',
         license: 'MIT',

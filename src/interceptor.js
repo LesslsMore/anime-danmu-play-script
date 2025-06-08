@@ -1,83 +1,84 @@
-import { GM_cookie, unsafeWindow, monkeyWindow, GM_addElement } from '$';
+import {get_anime_info} from '@/parser/get_anime_info'
+import {set_db_url_info} from "@/danmu/db/db_url.js";
 
 function interceptor() {
     'use strict';
 
-    // // 1. 拦截XHR请求
-    // const originalXHROpen = XMLHttpRequest.prototype.open;
-    // XMLHttpRequest.prototype.open = function(method, url) {
-    //     if (url.includes('ads.com')) {
-    //         console.log('屏蔽广告请求:', url);
-    //         return; // 直接阻断请求
-    //     }
-    //     originalXHROpen.apply(this, arguments);
-    // };
+    if (window.self != window.top) {
+        console.log("当前页面位于iframe子页面");
+        console.log(window.location.href)
 
-    // // 2. 拦截Fetch请求
-    // const originalFetch = unsafeWindow.fetch;
-    // unsafeWindow.fetch = async function(input, init) {
+        window.addEventListener('message', async function (event) {
+            let data = event.data
+            console.log('message', data)
+            if (data.msg === 'get_url') {
+                // console.log(window)
+                // console.log(unsafeWindow)
+                let url_decode = unsafeWindow.v_decrypt(unsafeWindow.config.url, unsafeWindow._token_key, unsafeWindow.key_token)
+                let message = {msg:'send_url', url: url_decode, href: location.href}; // 要传递的消息
+                console.log("向父页面发送消息：", message);
+                unsafeWindow.parent.postMessage(message, "*");
+            }
+        })
+    } else if (window === window.top) {
+        console.log("当前页面位于主页面");
+        console.log(window.location.href)
 
-    //     const response = await originalFetch(input, init);
+        window.addEventListener('message', async function (event) {
+            let data = event.data
+            console.log('message', data)
+            if (data.msg === 'send_url') {
+                window.src_url = data.url
 
-    //     const url = typeof input === 'string' ? input : input.url;
-    //     // 精准匹配目标接口
-    //     console.log(`url: `, url)
-    //     return response;
-    // };
+                let iframe = document.querySelector("#playleft > iframe")
 
-    // 3. 监听页面内 iframe 的 src 变化，捕获 m3u8.php? 请求
-    const observer = new MutationObserver((mutations) => {
-        mutations.forEach(mutation => {
-            mutation.addedNodes.forEach(node => {
-                if (node.tagName === 'IFRAME' && node.src 
-                    // && node.src.includes('danmu.yhdmjx.com/m3u8.php?')
-                ) {
-                    console.log('检测到播放器 iframe 地址:', node.src);
-                    // 这里可以进一步处理 node.src
+                let play = import.meta.env.VITE_baseURL
+                if (!iframe.src.startsWith(play)) {
+                    let web_video_info = {}
+
+                    get_anime_info(web_video_info)
+
+                    let {
+                        anime_id, episode, title, url, src_url
+                    } = web_video_info
+
+                    await set_db_url_info(web_video_info)
+
+                    function get_param_url(animeId, episode, title, videoUrl) {
+                        const queryParams = new URLSearchParams();
+                        if (animeId) queryParams.append('anime_id', animeId);
+                        if (episode) queryParams.append('episode', episode);
+                        if (title) queryParams.append('title', title);
+                        if (videoUrl) queryParams.append('url', videoUrl);
+                        return queryParams.toString();
+                    }
+
+                    let play_url = `${play}/play?${get_param_url(anime_id, episode, title, web_video_info.src_url)}`
+                    // play_url = `https://jx.nnsvip.cn/?url=${web_video_info.src_url}`
+
+                    iframe.src = play_url
+                    // document.querySelector("#playleft > iframe").src = play_url
                 }
-            });
-        });
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
-
-    // 页面初始时也检查一次
-    document.querySelectorAll('iframe').forEach(iframe => {
-        if (iframe.src 
-            // && iframe.src.includes('danmu.yhdmjx.com/m3u8.php?')
-        ) {
-            console.log('初始检测到播放器 iframe 地址:', iframe.src);
-        }
-    });
-
-    // ... existing code ...
-
-    // 监听 video 元素的 src
-    function handleVideoSrc(video) {
-        if (video.src) {
-            console.log('检测到 video 播放器地址:', video.src);
-            // 这里可以进一步处理 video.src
-        }
+            }
+        }, true)
     }
 
-    // 1. 页面初始时检查
-    document.querySelectorAll('video').forEach(handleVideoSrc);
+    // 页面初始时也检查一次
+    document.querySelectorAll("#playleft > iframe").forEach(iframe => {
+        if (iframe.src) {
+            // console.log('初始检测到播放器 iframe 地址:', iframe.src);
+            // document.querySelectorAll('#lelevideo').forEach(handleVideoSrc);
+            // console.log(iframe)
 
-    // 2. 动态监听 video 元素插入
-    const videoObserver = new MutationObserver((mutations) => {
-        mutations.forEach(mutation => {
-            mutation.addedNodes.forEach(node => {
-                if (node.tagName === 'VIDEO') {
-                    handleVideoSrc(node);
-                } else if (node.querySelectorAll) {
-                    node.querySelectorAll('video').forEach(handleVideoSrc);
-                }
+            iframe.addEventListener('load', async () => {
+                console.log('跨域 iframe 加载完成');
+                let message = {msg: 'get_url'}; // 要传递的消息
+                window[2].postMessage(message, "*");
             });
-        });
+        }
     });
-    videoObserver.observe(document.body, { childList: true, subtree: true });
 }
 
 export {
-    interceptor 
+    interceptor,
 }

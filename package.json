@@ -15,6 +15,7 @@
     "vite-plugin-monkey": "^3.5.1"
   },
   "dependencies": {
+    "@types/jquery": "^3.5.14",
     "artplayer": "^5.1.1",
     "artplayer-plugin-danmuku": "^5.0.1",
     "axios": "^1.9.0",
@@ -22,6 +23,7 @@
     "dexie": "^4.0.8",
     "file-saver": "^2.0.5",
     "hls.js": "^1.6.2",
+    "jquery": "^3.7.1",
     "unplugin-auto-import": "^0.17.6"
   }
 }

@@ -14,11 +14,18 @@ export default defineConfig({
       userscript: {
         name: '动漫弹幕播放',
         namespace: 'https://github.com/LesslsMore/anime-danmu-play',
-        version: '0.5.0',
+        version: '0.5.1',
         author: 'lesslsmore',
         license: 'MIT',
         description: '自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫',
         icon: 'https://cdn.yinghuazy.xyz/webjs/stui_tpl/statics/img/favicon.ico',
+        match: [
+          /^https:\/\/www\.dmla.*\.com\/play\/.*$/,
+          // 'https://danmu.yhdmjx.com/*',
+          'https://www.tt776b.com/play/*', // 风车动漫
+          'https://www.dm539.com/play/*', // 樱花动漫
+            // '*',
+        ],
         include: [
           // 'https://www.dmla*.com/play/*', // 风车动漫
           /^https:\/\/www\.dmla.*\.com\/play\/.*$/,
@@ -27,6 +34,7 @@ export default defineConfig({
           'https://www.dm539.com/play/*', // 樱花动漫
           // 'https://www.agedm.org/play/*',
           // 'https://43.240.156.118:8443/vip/?url=age_*',
+          //   '*',
 
         ],
         connect: [
@@ -36,7 +44,11 @@ export default defineConfig({
           'self',
           '*',
         ],
-        'run-at': 'document-end',
+        'noframes': false,
+        'run-at': 'document-idle',
+        // 'inject-into': 'content',
+        // @grant        GM_webRequest
+        // @grant        GM_xmlhttpRequest
       },
       build: {
         externalGlobals: {
@@ -47,6 +59,7 @@ export default defineConfig({
           'dexie': cdn.jsdelivr('Dexie', 'dist/dexie.min.js'),
           'file-saver': cdn.jsdelivr('saveAs', 'dist/FileSaver.min.js'),
         },
+        // @require      https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js
       },
     }),
   ],

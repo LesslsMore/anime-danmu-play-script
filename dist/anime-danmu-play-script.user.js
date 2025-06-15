@@ -1,13 +1,15 @@
 // ==UserScript==
 // @name         动漫弹幕播放
 // @namespace    https://github.com/LesslsMore/anime-danmu-play-script
-// @version      0.5.1
+// @version      0.5.2
 // @author       lesslsmore
-// @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫
+// @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫、AGE 动漫
 // @license      MIT
 // @icon         https://cdn.yinghuazy.xyz/webjs/stui_tpl/statics/img/favicon.ico
 // @include      /^https:\/\/www\.dmla.*\.com\/play\/.*$/
 // @include      https://danmu.yhdmjx.com/*
+// @include      /^https:\/\/www.age.*\/play\/.*$/
+// @include      https://43.240.156.118:8443/*
 // @include      https://www.tt776b.com/play/*
 // @include      https://www.dm539.com/play/*
 // @match        /^https:\/\/www\.dmla.*\.com\/play\/.*$/
@@ -20,50 +22,23 @@
 // @connect      self
 // @connect      *
 // @grant        unsafeWindow
-// @run-at       document-idle
+// @run-at       document-end
 // ==/UserScript==
 
 (function (Dexie) {
   'use strict';
 
-  function get_anime_info(web_video_info) {
+  async function get_agedm_info(web_video_info) {
     let url = window.location.href;
-    if (url.startsWith("https://www.dmla")) {
-      let episode = parseInt(url.split("-").pop().split(".")[0]);
-      let include = [
-        /^https:\/\/www\.dmla.*\.com\/play\/.*$/,
-        // 风车动漫
-        "https://www.tt776b.com/play/*",
-        // 风车动漫
-        "https://www.dm539.com/play/*"
-        // 樱花动漫
-      ];
-      let els = [
-        document.querySelector(".stui-player__detail.detail > h1 > a"),
-        document.querySelector("body > div.myui-player.clearfix > div > div > div.myui-player__data.hidden-xs.clearfix > h3 > a"),
-        document.querySelector(".myui-panel__head.active.clearfix > h3 > a")
-      ];
-      let el;
-      let title;
-      for (let i = 0; i < include.length; i++) {
-        if (url.match(include[i])) {
-          el = els[i];
-        }
-      }
-      if (el != void 0) {
-        title = el.text;
-      } else {
-        title = "";
-        console.log("没有自动匹配到动漫名称");
-      }
-      let anime_url = url.split("-")[0];
-      let anime_id = parseInt(anime_url.split("/")[4]);
-      web_video_info["anime_id"] = anime_id;
-      web_video_info["episode"] = episode;
-      web_video_info["title"] = title;
-      web_video_info["url"] = url;
-      web_video_info["src_url"] = window.src_url;
-    }
+    let urls = url.split("/");
+    let len = urls.length;
+    let episode = urls[len - 1];
+    let anime_id = urls[len - 3];
+    let title = document.querySelector(".card-title").textContent;
+    web_video_info["anime_id"] = anime_id;
+    web_video_info["episode"] = episode;
+    web_video_info["title"] = title;
+    web_video_info["url"] = url;
     return web_video_info;
   }
   const db_name = "anime";
@@ -143,8 +118,6 @@
         var_anime_url["episodes"][url] = src_url;
         await db_url.put(anime_id, var_anime_url);
       }
-    } else {
-      src_url = var_anime_url["episodes"][url];
     }
     console.log("src_url", src_url);
     web_video_info["src_url"] = src_url;
@@ -152,16 +125,113 @@
       var_anime_url
     };
   }
+  function get_yhdm_info(web_video_info) {
+    let url = window.location.href;
+    if (url.startsWith("https://www.dmla")) {
+      let episode = parseInt(url.split("-").pop().split(".")[0]);
+      let include = [
+        /^https:\/\/www\.dmla.*\.com\/play\/.*$/,
+        // 风车动漫
+        "https://www.tt776b.com/play/*",
+        // 风车动漫
+        "https://www.dm539.com/play/*"
+        // 樱花动漫
+      ];
+      let els = [
+        document.querySelector(".stui-player__detail.detail > h1 > a"),
+        document.querySelector("body > div.myui-player.clearfix > div > div > div.myui-player__data.hidden-xs.clearfix > h3 > a"),
+        document.querySelector(".myui-panel__head.active.clearfix > h3 > a")
+      ];
+      let el;
+      let title;
+      for (let i = 0; i < include.length; i++) {
+        if (url.match(include[i])) {
+          el = els[i];
+        }
+      }
+      if (el != void 0) {
+        title = el.text;
+      } else {
+        title = "";
+        console.log("没有自动匹配到动漫名称");
+      }
+      let anime_url = url.split("-")[0];
+      let anime_id = parseInt(anime_url.split("/")[4]);
+      web_video_info["anime_id"] = anime_id;
+      web_video_info["episode"] = episode;
+      web_video_info["title"] = title;
+      web_video_info["url"] = url;
+    }
+    return web_video_info;
+  }
   var _unsafeWindow = /* @__PURE__ */ (() => typeof unsafeWindow != "undefined" ? unsafeWindow : void 0)();
-  function interceptor() {
+  function get_web_iframe() {
+    let url = window.location.href;
+    let iframe;
+    if (url.startsWith("https://www.dmla")) {
+      iframe = document.querySelector("#playleft > iframe");
+    } else if (url.startsWith("https://www.age")) {
+      iframe = document.querySelector("#iframeForVideo");
+    }
+    return iframe;
+  }
+  async function get_web_info(src_url) {
+    let url = window.location.href;
+    let web_video_info = {
+      src_url
+    };
+    if (url.startsWith("https://www.dmla")) {
+      get_yhdm_info(web_video_info);
+    } else if (url.startsWith("https://www.age")) {
+      get_agedm_info(web_video_info);
+    }
+    console.log("get_web_info", web_video_info);
+    await set_db_url_info(web_video_info);
+    return web_video_info;
+  }
+  function get_src_url() {
+    let url = window.location.href;
+    let src_url;
+    let video;
+    if (url.startsWith("https://danmu.yhdmjx.com/")) {
+      src_url = _unsafeWindow.v_decrypt(_unsafeWindow.config.url, _unsafeWindow._token_key, _unsafeWindow.key_token);
+      video = document.querySelector("#lelevideo");
+    } else if (url.startsWith("https://43.240.156.118:8443/")) {
+      video = document.querySelector("video");
+      src_url = _unsafeWindow.info.url;
+    }
+    src_url = video ? video.src : src_url;
+    return src_url;
+  }
+  async function interceptor() {
     if (window.self != window.top) {
       console.log("当前页面位于iframe子页面");
       console.log(window.location.href);
-      window.addEventListener("message", async function(event) {
+      const observer = new MutationObserver(function(mutationsList, observer2) {
+        console.log("mutationsList", mutationsList);
+        console.log("observer", observer2);
+        let video = document.querySelector("video");
+        if (video) {
+          console.log("目标元素已加载");
+          let src_url = video.src;
+          console.log("src_url", src_url);
+          let message = { msg: "send_url", url: src_url, href: location.href };
+          console.log("向父页面发送消息：", message);
+          _unsafeWindow.parent.postMessage(message, "*");
+          observer2.disconnect();
+        }
+      });
+      observer.observe(document.body, {
+        childList: true
+        // 观察目标子节点的变化，添加或删除
+        // attributes: true, // 观察属性变动
+        // subtree: true, //默认是false，设置为true后可观察后代节点
+      });
+      _unsafeWindow.addEventListener("message", async function(event) {
         let data = event.data;
-        console.log("message", data);
         if (data.msg === "get_url") {
-          let url_decode = _unsafeWindow.v_decrypt(_unsafeWindow.config.url, _unsafeWindow._token_key, _unsafeWindow.key_token);
+          console.log("message", data);
+          let url_decode = get_src_url();
           let message = { msg: "send_url", url: url_decode, href: location.href };
           console.log("向父页面发送消息：", message);
           _unsafeWindow.parent.postMessage(message, "*");
@@ -172,12 +242,12 @@
       console.log(window.location.href);
       window.addEventListener("message", async function(event) {
         let data = event.data;
-        console.log("message", data);
         if (data.msg === "send_url") {
-          window.src_url = data.url;
-          let iframe = document.querySelector("#playleft > iframe");
+          console.log("message", data);
+          let src_url = data.url;
+          let iframe2 = get_web_iframe();
           let play = "https://anime-danmu-play.vercel.app";
-          if (!iframe.src.startsWith(play)) {
+          if (!iframe2.src.startsWith(play)) {
             let get_param_url = function(animeId, episode2, title2, videoUrl) {
               const queryParams = new URLSearchParams();
               if (animeId)
@@ -190,31 +260,24 @@
                 queryParams.append("url", videoUrl);
               return queryParams.toString();
             };
-            let web_video_info = {};
-            get_anime_info(web_video_info);
-            let {
-              anime_id,
-              episode,
-              title,
-              url,
-              src_url
-            } = web_video_info;
-            await set_db_url_info(web_video_info);
-            let play_url = `${play}/play?${get_param_url(anime_id, episode, title, web_video_info.src_url)}`;
-            iframe.src = play_url;
+            let { anime_id, episode, title, url } = await get_web_info(src_url);
+            let play_url = `${play}/play?${get_param_url(anime_id, episode, title, src_url)}`;
+            iframe2.src = play_url;
           }
         }
       }, true);
-    }
-    document.querySelectorAll("#playleft > iframe").forEach((iframe) => {
+      let iframe = get_web_iframe();
       if (iframe.src) {
+        console.log("初始检测到播放器 iframe 地址:", iframe.src);
         iframe.addEventListener("load", async () => {
           console.log("跨域 iframe 加载完成");
           let message = { msg: "get_url" };
-          window[2].postMessage(message, "*");
+          let len = window.length;
+          let win = window[len - 1];
+          win.postMessage(message, "*");
         });
       }
-    });
+    }
   }
   interceptor();
 

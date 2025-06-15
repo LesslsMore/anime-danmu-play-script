@@ -1,14 +1,17 @@
 # 动漫弹幕播放
 
-自动匹配加载动漫剧集对应弹幕并播放，目前支持风车动漫、樱花动漫
+自动匹配加载动漫剧集对应弹幕并播放，目前支持风车动漫、樱花动漫、AGE动漫
 
 ### 支持网站
-- 风车动漫 https://www.dmla6.com/ https://www.tt776b.com/
+- 风车动漫 https://www.dmla7.com/ https://www.tt776b.com/
 - 樱花动漫 https://www.dm539.com/
+- AGE 动漫 https://www.agefans.la/
 
 风车动漫地址永久发布页 https://www.dmla.fans/
 
 樱花动漫地址永久发布页 http://dm519.fans/
+
+AGE 动漫地址永久发布页 https://github.com/agefanscom/website
 
 ## 主要功能
 
@@ -73,6 +76,8 @@
 https://greasyfork.org/zh-CN/scripts/485364
 
 ### 更新记录
+
+0.5.2 支持 AGE 动漫
 
 0.5.1 优化地址解析由逆向到 iframe 获取，修复解析地址经常失效的问题
 

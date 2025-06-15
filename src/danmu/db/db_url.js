@@ -19,9 +19,10 @@ async function set_db_url_info(web_video_info) {
             // 更新解析地址
             await db_url.put(anime_id, var_anime_url)
         }
-    } else {
-        src_url = var_anime_url['episodes'][url]
     }
+    // else {
+    //     src_url = var_anime_url['episodes'][url]
+    // }
     console.log('src_url', src_url)
     web_video_info['src_url'] = src_url
     return {

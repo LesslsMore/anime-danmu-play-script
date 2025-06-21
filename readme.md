@@ -77,6 +77,8 @@ https://greasyfork.org/zh-CN/scripts/485364
 
 ### 更新记录
 
+0.5.3 新增切换播放线路, 优化国内用户连接，默认线路为国内线路
+
 0.5.2 支持 AGE 动漫, 目前仅支持 VIP 西瓜的线路, 其余线路暂不支持, 如影响播放, 请关闭脚本
 
 0.5.1 优化地址解析由逆向到 iframe 获取, 修复解析地址经常失效的问题
@@ -121,5 +123,12 @@ https://greasyfork.org/zh-CN/scripts/485364
 [feedback](https://greasyfork.org/zh-CN/scripts/485364/feedback)
 
 如果觉得有用, 请转发和收藏, 这就是对优化和更新的支持！
+
+## 赞赏
+
+如果觉得有价值，赞赏当然最好了，转发分享也不错
+
+![](https://raw.githubusercontent.com/LesslsMore/blog-img/master/picgo/%E8%B5%9E%E8%B5%8F.png)
+
 
 

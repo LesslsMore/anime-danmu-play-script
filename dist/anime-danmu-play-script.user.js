@@ -203,7 +203,37 @@
     src_url = video ? video.src : src_url;
     return src_url;
   }
-  async function interceptor() {
+  function create_button() {
+    const button = document.createElement("button");
+    button.textContent = "切换线路";
+    button.style.position = "fixed";
+    button.style.left = "10px";
+    button.style.top = "50%";
+    button.style.transform = "translateY(-50%)";
+    button.style.zIndex = "9999";
+    button.style.padding = "10px 10px";
+    button.style.backgroundColor = "#00a1d6";
+    button.style.color = "#fff";
+    button.style.border = "none";
+    button.style.borderRadius = "5px";
+    button.style.cursor = "pointer";
+    button.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.2)";
+    button.addEventListener("click", async () => {
+      let iframe = get_web_iframe();
+      console.log("iframe", iframe.src);
+      const playUrls2 = JSON.parse("['https://anime-danmu-play.onrender.com', 'https://anime-danmu-play.vercel.app']".replace(/'/g, '"'));
+      const currentPlayUrl = localStorage.getItem("play_url");
+      let currentIndex = playUrls2.findIndex((url) => iframe.src.includes(url));
+      let nextIndex = (currentIndex + 1) % playUrls2.length;
+      let nextPlayUrl = playUrls2[nextIndex];
+      let src_url = iframe.src.replace(currentPlayUrl, nextPlayUrl);
+      console.log("src_url", src_url);
+      iframe.src = src_url;
+      localStorage.setItem("play_url", nextPlayUrl);
+    });
+    document.body.appendChild(button);
+  }
+  async function interceptor(play) {
     if (window.self != window.top) {
       console.log("当前页面位于iframe子页面");
       console.log(window.location.href);
@@ -238,6 +268,7 @@
         }
       });
     } else if (window === window.top) {
+      create_button();
       console.log("当前页面位于主页面");
       console.log(window.location.href);
       window.addEventListener("message", async function(event) {
@@ -246,7 +277,6 @@
           console.log("message", data);
           let src_url = data.url;
           let iframe2 = get_web_iframe();
-          let play = "https://anime-danmu-play.vercel.app";
           if (!iframe2.src.startsWith(play)) {
             let get_param_url = function(animeId, episode2, title2, videoUrl) {
               const queryParams = new URLSearchParams();
@@ -279,6 +309,11 @@
       }
     }
   }
-  interceptor();
+  const playUrls = JSON.parse("['https://anime-danmu-play.onrender.com', 'https://anime-danmu-play.vercel.app']".replace(/'/g, '"'));
+  console.log("import.meta.env.VITE_play_urls", playUrls);
+  if (!localStorage.getItem("play_url")) {
+    localStorage.setItem("play_url", playUrls[0]);
+  }
+  interceptor(localStorage.getItem("play_url"));
 
 })(Dexie);

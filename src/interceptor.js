@@ -1,6 +1,51 @@
 import {get_src_url, get_web_iframe, get_web_info} from '@/parser/get_anime_info.js'
 
-async function interceptor() {
+function create_button() {
+    // 创建悬浮按钮
+    const button = document.createElement("button");
+    button.textContent = "切换线路";
+    button.style.position = "fixed";
+    button.style.left = "10px"; // 距离左侧 10px
+    button.style.top = "50%"; // 垂直居中
+    button.style.transform = "translateY(-50%)"; // 垂直居中
+    button.style.zIndex = "9999"; // 确保按钮在最上层
+    button.style.padding = "10px 10px";
+    button.style.backgroundColor = "#00a1d6";
+    button.style.color = "#fff";
+    button.style.border = "none";
+    button.style.borderRadius = "5px";
+    button.style.cursor = "pointer";
+    button.style.boxShadow = "0 2px 5px rgba(0, 0, 0, 0.2)";
+
+    // 添加点击事件
+    button.addEventListener("click", async () => {
+        let iframe = get_web_iframe()
+        console.log('iframe', iframe.src);
+
+
+        // 获取 URL 列表并解析为数组
+        const playUrls = JSON.parse(import.meta.env.VITE_play_urls.replace(/'/g, '"'));
+        const currentPlayUrl = localStorage.getItem('play_url');
+
+        // 找出当前 URL 的索引，计算下一个 URL
+        let currentIndex = playUrls.findIndex(url => iframe.src.includes(url));
+        let nextIndex = (currentIndex + 1) % playUrls.length;
+        let nextPlayUrl = playUrls[nextIndex];
+
+        // 替换 src
+        let src_url = iframe.src.replace(currentPlayUrl, nextPlayUrl);
+        console.log('src_url', src_url);
+        iframe.src = src_url;
+
+        // 更新 localStorage
+        localStorage.setItem('play_url', nextPlayUrl);
+    });
+
+    // 将按钮添加到页面中
+    document.body.appendChild(button);
+}
+
+async function interceptor(play) {
     'use strict';
 
     if (window.self != window.top) {
@@ -76,6 +121,9 @@ async function interceptor() {
             }
         })
     } else if (window === window.top) {
+
+        create_button()
+
         console.log("当前页面位于主页面");
         console.log(window.location.href)
 
@@ -88,7 +136,6 @@ async function interceptor() {
                 let src_url = data.url
                 let iframe = get_web_iframe()
 
-                let play = import.meta.env.VITE_baseURL
                 if (!iframe.src.startsWith(play)) {
 
                     let {anime_id, episode, title, url} = await get_web_info(src_url)

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         动漫弹幕播放
 // @namespace    https://github.com/LesslsMore/anime-danmu-play-script
-// @version      0.5.3
+// @version      0.5.4
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫、AGE 动漫
 // @license      MIT
@@ -125,66 +125,106 @@
       var_anime_url
     };
   }
+  const titleStrategies = [
+    {
+      match(url) {
+        return url.startsWith("https://www.dmla");
+      },
+      getTitle() {
+        var _a;
+        return ((_a = document.querySelector(".stui-player__detail.detail > h1 > a")) == null ? void 0 : _a.text) || "";
+      }
+    },
+    {
+      match(url) {
+        return url.startsWith("https://www.tt776b.com/play");
+      },
+      getTitle() {
+        var _a;
+        return ((_a = document.querySelector("body > div.myui-player.clearfix > div > div > div.myui-player__data.hidden-xs.clearfix > h3 > a")) == null ? void 0 : _a.text) || "";
+      }
+    },
+    {
+      match(url) {
+        return url.startsWith("https://www.dm539.com/play");
+      },
+      getTitle() {
+        var _a;
+        return ((_a = document.querySelector(".myui-panel__head.active.clearfix > h3 > a")) == null ? void 0 : _a.text) || "";
+      }
+    }
+  ];
+  function get_title(url) {
+    for (const strategy of titleStrategies) {
+      if (strategy.match(url)) {
+        return strategy.getTitle();
+      }
+    }
+    console.warn("没有自动匹配到动漫名称");
+    return "";
+  }
   function get_yhdm_info(web_video_info) {
     let url = window.location.href;
-    if (url.startsWith("https://www.dmla")) {
-      let episode = parseInt(url.split("-").pop().split(".")[0]);
-      let include = [
-        /^https:\/\/www\.dmla.*\.com\/play\/.*$/,
-        // 风车动漫
-        "https://www.tt776b.com/play/*",
-        // 风车动漫
-        "https://www.dm539.com/play/*"
-        // 樱花动漫
-      ];
-      let els = [
-        document.querySelector(".stui-player__detail.detail > h1 > a"),
-        document.querySelector("body > div.myui-player.clearfix > div > div > div.myui-player__data.hidden-xs.clearfix > h3 > a"),
-        document.querySelector(".myui-panel__head.active.clearfix > h3 > a")
-      ];
-      let el;
-      let title;
-      for (let i = 0; i < include.length; i++) {
-        if (url.match(include[i])) {
-          el = els[i];
-        }
-      }
-      if (el != void 0) {
-        title = el.text;
-      } else {
-        title = "";
-        console.log("没有自动匹配到动漫名称");
-      }
-      let anime_url = url.split("-")[0];
-      let anime_id = parseInt(anime_url.split("/")[4]);
-      web_video_info["anime_id"] = anime_id;
-      web_video_info["episode"] = episode;
-      web_video_info["title"] = title;
-      web_video_info["url"] = url;
-    }
+    let title = get_title(url);
+    let episode = parseInt(url.split("-").pop().split(".")[0]);
+    let anime_url = url.split("-")[0];
+    let anime_id = parseInt(anime_url.split("/")[4]);
+    web_video_info["anime_id"] = anime_id;
+    web_video_info["episode"] = episode;
+    web_video_info["title"] = title;
+    web_video_info["url"] = url;
     return web_video_info;
   }
   var _unsafeWindow = /* @__PURE__ */ (() => typeof unsafeWindow != "undefined" ? unsafeWindow : void 0)();
+  const iframeStrategies = [
+    {
+      match(url) {
+        return url.startsWith("https://www.dmla") || url.startsWith("https://www.dm539.com/play") || url.startsWith("https://www.tt776b.com/play");
+      },
+      getIframe() {
+        return document.querySelector("#playleft > iframe");
+      },
+      get_info(web_video_info) {
+        return get_yhdm_info(web_video_info);
+      }
+    },
+    {
+      match(url) {
+        return url.startsWith("https://www.age");
+      },
+      getIframe() {
+        return document.querySelector("#iframeForVideo");
+      },
+      get_info(web_video_info) {
+        return get_agedm_info(web_video_info);
+      }
+    }
+  ];
   function get_web_iframe() {
     let url = window.location.href;
-    let iframe;
-    if (url.startsWith("https://www.dmla")) {
-      iframe = document.querySelector("#playleft > iframe");
-    } else if (url.startsWith("https://www.age")) {
-      iframe = document.querySelector("#iframeForVideo");
+    for (const strategy of iframeStrategies) {
+      if (strategy.match(url)) {
+        return strategy.getIframe();
+      }
     }
-    return iframe;
+    console.warn("未匹配到 iframe 获取策略");
+    return null;
+  }
+  function get_info_ByUrl(web_video_info) {
+    let url = window.location.href;
+    for (const strategy of iframeStrategies) {
+      if (strategy.match(url)) {
+        return strategy.get_info(web_video_info);
+      }
+    }
+    console.warn("未匹配到 iframe 获取策略");
+    return null;
   }
   async function get_web_info(src_url) {
-    let url = window.location.href;
     let web_video_info = {
       src_url
     };
-    if (url.startsWith("https://www.dmla")) {
-      get_yhdm_info(web_video_info);
-    } else if (url.startsWith("https://www.age")) {
-      get_agedm_info(web_video_info);
-    }
+    get_info_ByUrl(web_video_info);
     console.log("get_web_info", web_video_info);
     await set_db_url_info(web_video_info);
     return web_video_info;
@@ -310,7 +350,7 @@
     }
   }
   const playUrls = JSON.parse("['https://anime-danmu-play.onrender.com', 'https://anime-danmu-play.vercel.app']".replace(/'/g, '"'));
-  console.log("import.meta.env.VITE_play_urls", playUrls);
+  console.log("play_urls", playUrls);
   if (!localStorage.getItem("play_url")) {
     localStorage.setItem("play_url", playUrls[0]);
   }

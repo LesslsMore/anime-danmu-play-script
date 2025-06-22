@@ -7,7 +7,7 @@ import {get_web_iframe} from "@/parser/get_anime_info.js";
 // import '@/get_url_test/age_get_url.js'
 
 const playUrls = JSON.parse(import.meta.env.VITE_play_urls.replace(/'/g, '"'));
-console.log('import.meta.env.VITE_play_urls', playUrls);
+console.log('play_urls', playUrls);
 
 if (!localStorage.getItem('play_url')) {
     localStorage.setItem('play_url', playUrls[0]);

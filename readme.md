@@ -77,37 +77,9 @@ https://greasyfork.org/zh-CN/scripts/485364
 
 ### 更新记录
 
-0.5.3 新增切换播放线路, 优化国内用户连接，默认线路为国内线路
+详情见
 
-0.5.2 支持 AGE 动漫, 目前仅支持 VIP 西瓜的线路, 其余线路暂不支持, 如影响播放, 请关闭脚本
-
-0.5.1 优化地址解析由逆向到 iframe 获取, 修复解析地址经常失效的问题
-
-0.5.0 优化解耦分离播放器、地址解析
-
-0.4.0 优化完善播放器初始化、弹幕搜索、数据缓存
-
-0.3.11 更新视频解析地址
-
-0.3.10 适配网站最新视频地址解析方式
-
-0.3.9 缓存弹幕, 支持上传 json 格式弹幕, 支持当前弹幕下载
-
-0.3.8 弹弹play接口加入用户权限验证
-
-0.3.7 缓存 info 优化, 设置过期时间为一周, 避免新番更新后没有对应弹幕信息
-
-0.3.6 缓存 info url 分离, 加入剧集偏移, 调整剧集和弹幕不一致的情况
-
-0.3.5 优化手动上传弹幕, 修改缓存为 IndexedDB, 设置过期时间
-
-0.3.4 优化支持更多网站, 添加网站及发布地址说明
-
-0.3.3 优化完善手动搜索番剧选择功能, 代码优化为事件驱动
-
-0.3.2 显示弹幕信息, 添加缓存, 优化性能, 记录选择的番剧
-
-0.3.1 优化完善手动搜索剧集选择功能
+https://github.com/LesslsMore/anime-danmu-play-script/releases
 
 ### todo
 - 观看时间, 历史记录 
@@ -116,7 +88,11 @@ https://greasyfork.org/zh-CN/scripts/485364
 
 ### 最后
 
-欢迎提交问题与反馈！
+欢迎提交问题与交流反馈！
+
+qq 群: 534975950
+
+![](https://raw.githubusercontent.com/LesslsMore/blog-img/master/picgo/qrcode_1750556795932.jpg)
 
 [issue](https://github.com/LesslsMore/anime-danmu-play-script/issues)
 

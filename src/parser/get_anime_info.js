@@ -2,16 +2,58 @@ import {get_agedm_info} from "@/parser/get_agedm_info.js";
 import {set_db_url_info} from "@/danmu/db/db_url.js";
 import {get_yhdm_info} from "@/parser/get_yhdm_info.js";
 
+
+// 定义 iframe 获取策略
+const iframeStrategies = [
+    {
+        match(url) {
+            return url.startsWith('https://www.dmla') ||
+                url.startsWith('https://www.dm539.com/play') ||
+                url.startsWith('https://www.tt776b.com/play');
+        },
+        getIframe() {
+            return document.querySelector("#playleft > iframe");
+        },
+        get_info(web_video_info) {
+            return get_yhdm_info(web_video_info)
+        }
+    },
+    {
+        match(url) {
+            return url.startsWith('https://www.age');
+        },
+        getIframe() {
+            return document.querySelector("#iframeForVideo");
+        },
+        get_info(web_video_info) {
+            return get_agedm_info(web_video_info)
+        }
+    }
+];
+
+// 获取 iframe 的统一接口
 function get_web_iframe() {
     let url = window.location.href
-    let iframe
-    if (url.startsWith('https://www.dmla')) {
-        iframe = document.querySelector("#playleft > iframe")
-    } else if(url.startsWith('https://www.age')) {
-        iframe = document.querySelector("#iframeForVideo")
+    for (const strategy of iframeStrategies) {
+        if (strategy.match(url)) {
+            return strategy.getIframe();
+        }
     }
-    return iframe
+    console.warn("未匹配到 iframe 获取策略");
+    return null;
 }
+
+function get_info_ByUrl(web_video_info) {
+    let url = window.location.href
+    for (const strategy of iframeStrategies) {
+        if (strategy.match(url)) {
+            return strategy.get_info(web_video_info);
+        }
+    }
+    console.warn("未匹配到 iframe 获取策略");
+    return null;
+}
+
 
 async function get_web_info(src_url) {
     let url = window.location.href
@@ -19,11 +61,7 @@ async function get_web_info(src_url) {
     let web_video_info = {
         src_url,
     }
-    if (url.startsWith('https://www.dmla')) {
-        info = get_yhdm_info(web_video_info)
-    } else if(url.startsWith('https://www.age')) {
-        info = get_agedm_info(web_video_info)
-    }
+    info = get_info_ByUrl(web_video_info)
     console.log('get_web_info', web_video_info)
 
     await set_db_url_info(web_video_info)
@@ -40,7 +78,7 @@ function get_src_url() {
         src_url = unsafeWindow.v_decrypt(unsafeWindow.config.url, unsafeWindow._token_key, unsafeWindow.key_token)
         video = document.querySelector("#lelevideo")
 
-    } else if(url.startsWith('https://43.240.156.118:8443/')) {
+    } else if (url.startsWith('https://43.240.156.118:8443/')) {
         video = document.querySelector("video")
         // console.log('document', document)
         // console.log('video', video)

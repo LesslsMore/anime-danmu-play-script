@@ -150,7 +150,7 @@ async function interceptor(play) {
                     }
                     if (src_url === '') {
                         // confirm('地址解析失败，尝试获取缓存地址');
-                        alert('地址解析失败，尝试获取缓存地址');
+                        // alert('地址解析失败，尝试获取缓存地址');
                         console.log('地址解析失败，尝试获取缓存地址');
                     }
                     let play_url = `${play}/play?${get_param_url(anime_id, episode, title, src_url)}`

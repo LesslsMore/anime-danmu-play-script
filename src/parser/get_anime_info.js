@@ -74,77 +74,77 @@ function get_src_url() {
     let video
     // console.log(window)
     // console.log(unsafeWindow)
-    try {
-        if (url.startsWith('https://danmu.yhdmjx.com/')) {
-            src_url = unsafeWindow.v_decrypt(unsafeWindow.config.url, unsafeWindow._token_key, unsafeWindow.key_token)
-            video = document.querySelector("#lelevideo")
+    // try {
+    if (url.startsWith('https://danmu.yhdmjx.com/')) {
+        src_url = unsafeWindow.v_decrypt(unsafeWindow.config.url, unsafeWindow._token_key, unsafeWindow.key_token)
+        video = document.querySelector("#lelevideo")
 
-        } else if (url.startsWith('https://43.240.156.118:8443/')) {
-            video = document.querySelector("video")
-            // console.log('document', document)
-            // console.log('video', video)
+    } else if (url.startsWith('https://43.240.156.118:8443/')) {
+        video = document.querySelector("video")
+        // console.log('document', document)
+        // console.log('video', video)
 
-            src_url = unsafeWindow.info.url
+        src_url = unsafeWindow.info.url
 
-            // const observer = new MutationObserver(function (mutationsList, observer) {
-            //     // 判断某个特定元素是否已经存在
-            //     console.log('mutationsList', mutationsList)
-            //     console.log('observer', observer)
-            //     if (document.querySelector("video")) {
-            //         console.log("目标元素已加载");
-            //         src_url = unsafeWindow.info.url
-            //         console.log('src_url', src_url)
-            //         observer.disconnect(); // 停止观察
-            //     }
-            // });
-            //
-            // observer.observe(document.body, {
-            //     childList: true, // 观察目标子节点的变化，添加或删除
-            //     attributes: true, // 观察属性变动
-            //     subtree: true, //默认是false，设置为true后可观察后代节点
-            // });
-            //
-            // function init() {
-            //     console.log("DOM 加载完成");
-            //     src_url = unsafeWindow.info.url
-            //     console.log('src_url', src_url)
-            // }
-            //
-            // if (document.readyState !== 'loading') {
-            //     init()
-            // } else {
-            //     window.addEventListener('DOMContentLoaded', init)
-            // }
+        // const observer = new MutationObserver(function (mutationsList, observer) {
+        //     // 判断某个特定元素是否已经存在
+        //     console.log('mutationsList', mutationsList)
+        //     console.log('observer', observer)
+        //     if (document.querySelector("video")) {
+        //         console.log("目标元素已加载");
+        //         src_url = unsafeWindow.info.url
+        //         console.log('src_url', src_url)
+        //         observer.disconnect(); // 停止观察
+        //     }
+        // });
+        //
+        // observer.observe(document.body, {
+        //     childList: true, // 观察目标子节点的变化，添加或删除
+        //     attributes: true, // 观察属性变动
+        //     subtree: true, //默认是false，设置为true后可观察后代节点
+        // });
+        //
+        // function init() {
+        //     console.log("DOM 加载完成");
+        //     src_url = unsafeWindow.info.url
+        //     console.log('src_url', src_url)
+        // }
+        //
+        // if (document.readyState !== 'loading') {
+        //     init()
+        // } else {
+        //     window.addEventListener('DOMContentLoaded', init)
+        // }
 
 
-            // document.addEventListener("DOMContentLoaded", function () {
-            //     console.log("DOM 加载完成");
-            //     src_url = unsafeWindow.info.url
-            //     console.log('src_url', src_url)
-            // });
-            //
-            //
-            // if (document.readyState === "complete") {
-            //     console.log("文档和所有资源已加载完成");
-            // } else {
-            //     window.addEventListener("load", function () {
-            //         console.log("最终所有资源加载完成");
-            //         src_url = unsafeWindow.info.url
-            //         console.log('src_url', src_url)
-            //     });
-            // }
-            // window.onload = function () {
-            //     console.log("页面所有资源加载完成");
-            //     src_url = unsafeWindow.info.url
-            //     console.log('src_url', src_url)
-            // };
+        // document.addEventListener("DOMContentLoaded", function () {
+        //     console.log("DOM 加载完成");
+        //     src_url = unsafeWindow.info.url
+        //     console.log('src_url', src_url)
+        // });
+        //
+        //
+        // if (document.readyState === "complete") {
+        //     console.log("文档和所有资源已加载完成");
+        // } else {
+        //     window.addEventListener("load", function () {
+        //         console.log("最终所有资源加载完成");
+        //         src_url = unsafeWindow.info.url
+        //         console.log('src_url', src_url)
+        //     });
+        // }
+        // window.onload = function () {
+        //     console.log("页面所有资源加载完成");
+        //     src_url = unsafeWindow.info.url
+        //     console.log('src_url', src_url)
+        // };
 
-        }
-
-        src_url = video ? video.src : src_url
-    } catch (e) {
-        console.log('get_src_url error', e)
     }
+
+    src_url = video ? video.src : src_url
+    // } catch (e) {
+    //     console.log('get_src_url error', e)
+    // }
     return src_url
 }
 

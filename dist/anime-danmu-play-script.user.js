@@ -233,18 +233,14 @@
     let url = window.location.href;
     let src_url = "";
     let video;
-    try {
-      if (url.startsWith("https://danmu.yhdmjx.com/")) {
-        src_url = _unsafeWindow.v_decrypt(_unsafeWindow.config.url, _unsafeWindow._token_key, _unsafeWindow.key_token);
-        video = document.querySelector("#lelevideo");
-      } else if (url.startsWith("https://43.240.156.118:8443/")) {
-        video = document.querySelector("video");
-        src_url = _unsafeWindow.info.url;
-      }
-      src_url = video ? video.src : src_url;
-    } catch (e) {
-      console.log("get_src_url error", e);
+    if (url.startsWith("https://danmu.yhdmjx.com/")) {
+      src_url = _unsafeWindow.v_decrypt(_unsafeWindow.config.url, _unsafeWindow._token_key, _unsafeWindow.key_token);
+      video = document.querySelector("#lelevideo");
+    } else if (url.startsWith("https://43.240.156.118:8443/")) {
+      video = document.querySelector("video");
+      src_url = _unsafeWindow.info.url;
     }
+    src_url = video ? video.src : src_url;
     return src_url;
   }
   function create_button() {
@@ -336,7 +332,6 @@
             };
             let { anime_id, episode, title, url } = await get_web_info(src_url);
             if (src_url === "") {
-              alert("地址解析失败，尝试获取缓存地址");
               console.log("地址解析失败，尝试获取缓存地址");
             }
             let play_url = `${play}/play?${get_param_url(anime_id, episode, title, src_url)}`;

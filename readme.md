@@ -81,6 +81,8 @@ https://greasyfork.org/zh-CN/scripts/485364
 
 https://github.com/LesslsMore/anime-danmu-play-script/releases
 
+https://greasyfork.org/zh-CN/scripts/485364/versions
+
 ### todo
 - 观看时间, 历史记录 
 - 弹幕发送

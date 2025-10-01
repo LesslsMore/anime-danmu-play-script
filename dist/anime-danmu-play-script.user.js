@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         动漫弹幕播放
 // @namespace    https://github.com/LesslsMore/anime-danmu-play-script
-// @version      0.5.5
+// @version      0.5.6
 // @author       lesslsmore
 // @description  自动匹配加载动漫剧集对应弹幕并播放，目前支持樱花动漫、风车动漫、AGE 动漫
 // @license      MIT
@@ -261,7 +261,7 @@
     button.addEventListener("click", async () => {
       let iframe = get_web_iframe();
       console.log("iframe", iframe.src);
-      const playUrls2 = JSON.parse("['https://anime-danmu-play.onrender.com', 'https://anime-danmu-play.vercel.app']".replace(/'/g, '"'));
+      const playUrls2 = JSON.parse("['https://anime-danmu.onrender.com/danmu', 'https://anime-danmu.vercel.app/danmu']".replace(/'/g, '"'));
       const currentPlayUrl = localStorage.getItem("play_url");
       let currentIndex = playUrls2.findIndex((url) => iframe.src.includes(url));
       let nextIndex = (currentIndex + 1) % playUrls2.length;
@@ -352,7 +352,7 @@
       }
     }
   }
-  const playUrls = JSON.parse("['https://anime-danmu-play.onrender.com', 'https://anime-danmu-play.vercel.app']".replace(/'/g, '"'));
+  const playUrls = JSON.parse("['https://anime-danmu.onrender.com/danmu', 'https://anime-danmu.vercel.app/danmu']".replace(/'/g, '"'));
   console.log("play_urls", playUrls);
   if (!localStorage.getItem("play_url")) {
     localStorage.setItem("play_url", playUrls[0]);

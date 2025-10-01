@@ -24,7 +24,7 @@ function create_button() {
 
 
         // 获取 URL 列表并解析为数组
-        const playUrls = JSON.parse(import.meta.env.VITE_play_urls.replace(/'/g, '"'));
+        const playUrls = JSON.parse(import.meta.env.VITE_PLAY_URLS.replace(/'/g, '"'));
         const currentPlayUrl = localStorage.getItem('play_url');
 
         // 找出当前 URL 的索引，计算下一个 URL

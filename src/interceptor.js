@@ -39,6 +39,7 @@ function create_button() {
 
         // 更新 localStorage
         localStorage.setItem('play_url', nextPlayUrl);
+        console.log('play_url', nextPlayUrl);
     });
 
     // 将按钮添加到页面中
